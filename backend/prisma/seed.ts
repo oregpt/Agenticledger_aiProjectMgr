@@ -97,10 +97,11 @@ async function main() {
   const menus = [
     // Main Section
     { name: 'Dashboard', slug: 'dashboard', path: '/dashboard', icon: 'LayoutDashboard', section: MenuSection.MAIN, sortOrder: 1 },
-    { name: 'Reports', slug: 'reports', path: '/reports', icon: 'FileText', section: MenuSection.MAIN, sortOrder: 2 },
-    { name: 'Data Export', slug: 'data_export', path: '/data-export', icon: 'Download', section: MenuSection.MAIN, sortOrder: 3 },
-    { name: 'Settings', slug: 'settings', path: '/settings', icon: 'Settings', section: MenuSection.MAIN, sortOrder: 4 },
-    { name: 'Audit Log', slug: 'audit_log', path: '/audit-log', icon: 'History', section: MenuSection.MAIN, sortOrder: 5 },
+    { name: 'Plan', slug: 'plan', path: '/plan', icon: 'ListTree', section: MenuSection.MAIN, sortOrder: 2 },
+    { name: 'Reports', slug: 'reports', path: '/reports', icon: 'FileText', section: MenuSection.MAIN, sortOrder: 3 },
+    { name: 'Data Export', slug: 'data_export', path: '/data-export', icon: 'Download', section: MenuSection.MAIN, sortOrder: 4 },
+    { name: 'Settings', slug: 'settings', path: '/settings', icon: 'Settings', section: MenuSection.MAIN, sortOrder: 5 },
+    { name: 'Audit Log', slug: 'audit_log', path: '/audit-log', icon: 'History', section: MenuSection.MAIN, sortOrder: 6 },
 
     // Admin Section
     { name: 'Organization', slug: 'admin_organization', path: '/admin/organization', icon: 'Building2', section: MenuSection.ADMIN, sortOrder: 1 },
@@ -133,11 +134,13 @@ async function main() {
   const permissionMatrix: Record<string, Record<string, { c: boolean; r: boolean; u: boolean; d: boolean }>> = {
     viewer: {
       dashboard: { c: false, r: true, u: false, d: false },
+      plan: { c: false, r: true, u: false, d: false },
       reports: { c: false, r: true, u: false, d: false },
       settings: { c: false, r: true, u: false, d: false },
     },
     standard_user: {
       dashboard: { c: false, r: true, u: false, d: false },
+      plan: { c: true, r: true, u: true, d: false },
       reports: { c: true, r: true, u: true, d: true },
       data_export: { c: false, r: true, u: false, d: false },
       settings: { c: false, r: true, u: true, d: false },
@@ -145,6 +148,7 @@ async function main() {
     },
     advanced_user: {
       dashboard: { c: false, r: true, u: false, d: false },
+      plan: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
       data_export: { c: false, r: true, u: true, d: false },
       settings: { c: false, r: true, u: true, d: false },
@@ -152,6 +156,7 @@ async function main() {
     },
     org_admin: {
       dashboard: { c: false, r: true, u: false, d: false },
+      plan: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
       data_export: { c: true, r: true, u: true, d: true },
       settings: { c: true, r: true, u: true, d: true },
@@ -161,6 +166,7 @@ async function main() {
     },
     platform_admin: {
       dashboard: { c: false, r: true, u: false, d: false },
+      plan: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
       data_export: { c: true, r: true, u: true, d: true },
       settings: { c: true, r: true, u: true, d: true },
@@ -229,7 +235,7 @@ async function main() {
   console.log('Creating platform settings...');
 
   const platformSettings = [
-    { key: 'app_name', value: 'Multi-Tenant App', type: SettingType.STRING, description: 'Application name', category: 'general' },
+    { key: 'app_name', value: 'AI Project Manager', type: SettingType.STRING, description: 'Application name', category: 'general' },
     { key: 'support_email', value: 'support@example.com', type: SettingType.STRING, description: 'Support email address', category: 'general' },
     { key: 'invitation_enabled', value: 'true', type: SettingType.BOOLEAN, description: 'Whether email invitations are enabled', category: 'general' },
     { key: 'invitation_expiry_hours', value: '72', type: SettingType.NUMBER, description: 'Invitation expiry time in hours', category: 'general' },

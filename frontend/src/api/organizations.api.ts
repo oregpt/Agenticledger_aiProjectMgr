@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { ApiResponse, Organization, User, OrganizationFeatureFlag } from '@/types';
+import type { ApiResponse, Organization, OrganizationFeatureFlag } from '@/types';
 
 export interface OrganizationDetails extends Organization {
   config: Record<string, unknown>;

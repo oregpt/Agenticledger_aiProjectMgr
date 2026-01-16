@@ -18,6 +18,9 @@ import { DataExportPage } from '@/pages/sample/DataExportPage';
 import { SettingsPage } from '@/pages/sample/SettingsPage';
 import { AuditLogPage } from '@/pages/sample/AuditLogPage';
 
+// Plan Pages
+import { PlanPage } from '@/pages/plan/PlanPage';
+
 // Admin Pages
 import { OrganizationPage } from '@/pages/admin/OrganizationPage';
 import { RolesPage } from '@/pages/admin/RolesPage';
@@ -54,6 +57,9 @@ function App() {
       >
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+
+        {/* Plan Page */}
+        <Route path="/plan" element={<PlanPage />} />
 
         {/* Sample Pages */}
         <Route path="/reports" element={<ReportsPage />} />

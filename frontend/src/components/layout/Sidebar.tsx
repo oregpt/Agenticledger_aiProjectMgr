@@ -10,6 +10,7 @@ import {
   Sliders,
   Building,
   ShieldCheck,
+  ListTree,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermissionsStore } from '@/stores/permissionsStore';
@@ -26,6 +27,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Sliders,
   Buildings: Building, // lucide uses 'Building' not 'Buildings'
   ShieldCheck,
+  ListTree,
 };
 
 export function Sidebar() {
@@ -66,7 +68,7 @@ export function Sidebar() {
     <aside className="flex h-screen w-64 flex-col border-r bg-card">
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
-        <h1 className="text-xl font-bold">Multi-Tenant App</h1>
+        <h1 className="text-xl font-bold">AI Project Manager</h1>
       </div>
 
       {/* Navigation */}

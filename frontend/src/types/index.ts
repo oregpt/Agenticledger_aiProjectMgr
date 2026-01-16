@@ -167,3 +167,100 @@ export interface LoginInput {
   email: string;
   password: string;
 }
+
+// Project types
+export interface Project {
+  id: string;
+  organizationId: number;
+  name: string;
+  client: string | null;
+  description: string | null;
+  startDate: string;
+  targetEndDate: string | null;
+  status: 'active' | 'completed' | 'on_hold' | 'cancelled';
+  statusConfig: Record<string, unknown>;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Plan Item types
+export interface PlanItemType {
+  id: number;
+  uuid: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  level: number;
+  icon: string | null;
+  color: string | null;
+  isSystem: boolean;
+  isActive: boolean;
+}
+
+export interface PlanItem {
+  id: string;
+  projectId: string;
+  parentId: string | null;
+  itemTypeId: number;
+  name: string;
+  description: string | null;
+  owner: string | null;
+  status: 'not_started' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled';
+  startDate: string | null;
+  targetEndDate: string | null;
+  actualStartDate: string | null;
+  actualEndDate: string | null;
+  notes: string | null;
+  references: string[];
+  sortOrder: number;
+  path: string;
+  depth: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  itemType: PlanItemType;
+  children?: PlanItem[];
+}
+
+export interface PlanItemHistory {
+  id: number;
+  planItemId: string;
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+  changedByUserId: number | null;
+  changedByEmail: string | null;
+  changeReason: string | null;
+  createdAt: string;
+}
+
+export interface CreatePlanItemInput {
+  parentId?: string;
+  itemTypeId: number;
+  name: string;
+  description?: string;
+  owner?: string;
+  status?: PlanItem['status'];
+  startDate?: string;
+  targetEndDate?: string;
+  notes?: string;
+  references?: string[];
+  sortOrder?: number;
+}
+
+export interface UpdatePlanItemInput {
+  parentId?: string | null;
+  itemTypeId?: number;
+  name?: string;
+  description?: string | null;
+  owner?: string | null;
+  status?: PlanItem['status'];
+  startDate?: string | null;
+  targetEndDate?: string | null;
+  actualStartDate?: string | null;
+  actualEndDate?: string | null;
+  notes?: string | null;
+  references?: string[];
+  sortOrder?: number;
+}

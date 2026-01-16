@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useAuthStore } from '@/stores/authStore';
-import rolesApi, { type RoleWithPermissions, type RolePermissionInput } from '@/api/roles.api';
+import rolesApi, { type RolePermissionInput } from '@/api/roles.api';
 import type { Role, Menu, Permission } from '@/types';
 
 export function RolesPage() {
