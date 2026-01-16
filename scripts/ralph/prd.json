@@ -63,7 +63,7 @@
         "Run migration and verify"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Path format: /uuid1/uuid2/uuid3 for fast hierarchy queries"
     },
     {
