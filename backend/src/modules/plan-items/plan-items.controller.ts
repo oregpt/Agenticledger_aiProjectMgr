@@ -150,3 +150,86 @@ export const bulkUpdatePlanItems: RequestHandler = async (
     next(error);
   }
 };
+
+// POST /api/projects/:projectId/plan/import - Import plan items from CSV
+export const importPlanItems: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const organizationId = req.organizationId!;
+    const { projectId } = req.params;
+
+    // Get CSV content from uploaded file or body
+    let csvContent: string;
+
+    if (req.file) {
+      csvContent = req.file.buffer.toString('utf-8');
+    } else if (req.body.csvContent) {
+      csvContent = req.body.csvContent;
+    } else {
+      res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'No CSV file or content provided' },
+      });
+      return;
+    }
+
+    const result = await planItemsService.importPlanItems(
+      projectId,
+      organizationId,
+      csvContent,
+      req.user?.id,
+      req.user?.email
+    );
+    successResponse(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/projects/:projectId/plan/import/preview - Preview CSV import
+export const previewCsvImport: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    // Get CSV content from uploaded file or body
+    let csvContent: string;
+
+    if (req.file) {
+      csvContent = req.file.buffer.toString('utf-8');
+    } else if (req.body.csvContent) {
+      csvContent = req.body.csvContent;
+    } else {
+      res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'No CSV file or content provided' },
+      });
+      return;
+    }
+
+    const result = planItemsService.parseCsvPreview(csvContent);
+    successResponse(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/plan-items/import/template - Get CSV template
+export const getCsvTemplate: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const template = planItemsService.getCsvTemplate();
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="plan-import-template.csv"');
+    res.send(template);
+  } catch (error) {
+    next(error);
+  }
+};

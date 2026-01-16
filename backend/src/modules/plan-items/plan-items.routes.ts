@@ -16,6 +16,12 @@ const router = Router();
 router.use(authenticate);
 router.use(requireOrgContext);
 
+// GET /api/plan-items/import/template - Get CSV template for import
+router.get(
+  '/import/template',
+  planItemsController.getCsvTemplate
+);
+
 // POST /api/plan-items/bulk-update - Bulk update plan items
 // NOTE: This must be before /:id routes to avoid conflict
 router.post(

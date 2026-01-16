@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Calendar, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ProjectSwitcher } from '@/components/plan/ProjectSwitcher';
 import { PlanTree } from '@/components/plan/PlanTree';
+import { PlanImport } from '@/components/plan/PlanImport';
 import { AddPlanItemDialog } from '@/components/plan/AddPlanItemDialog';
 import { EditPlanItemDialog } from '@/components/plan/EditPlanItemDialog';
 import { useProjectStore } from '@/stores/projectStore';
@@ -22,6 +24,9 @@ export function PlanPage() {
     updatePlanItemInTree,
     removePlanItemFromTree,
   } = useProjectStore();
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState('view');
 
   // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -125,13 +130,6 @@ export function PlanPage() {
         </div>
         <div className="flex items-center gap-3">
           <ProjectSwitcher />
-          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={planItemsLoading}>
-            <RefreshCw className={`h-4 w-4 ${planItemsLoading ? 'animate-spin' : ''}`} />
-          </Button>
-          <Button onClick={handleAddItem}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Item
-          </Button>
         </div>
       </div>
 
@@ -175,33 +173,62 @@ export function PlanPage() {
         </CardContent>
       </Card>
 
-      {/* Plan Tree */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Project Plan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {planItemsLoading ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner />
-            </div>
-          ) : planItemsError ? (
-            <div className="text-center py-12 text-destructive">
-              <p>{planItemsError}</p>
-              <Button variant="outline" onClick={handleRefresh} className="mt-4">
-                Try Again
+      {/* Sub-tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="view">Plan View</TabsTrigger>
+            <TabsTrigger value="import">Import CSV</TabsTrigger>
+          </TabsList>
+
+          {activeTab === 'view' && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={handleRefresh} disabled={planItemsLoading}>
+                <RefreshCw className={`h-4 w-4 ${planItemsLoading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button onClick={handleAddItem}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
               </Button>
             </div>
-          ) : (
-            <PlanTree
-              items={planItems}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onAddChild={handleAddChild}
-            />
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Plan View Tab */}
+        <TabsContent value="view">
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Plan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {planItemsLoading ? (
+                <div className="flex justify-center py-12">
+                  <LoadingSpinner />
+                </div>
+              ) : planItemsError ? (
+                <div className="text-center py-12 text-destructive">
+                  <p>{planItemsError}</p>
+                  <Button variant="outline" onClick={handleRefresh} className="mt-4">
+                    Try Again
+                  </Button>
+                </div>
+              ) : (
+                <PlanTree
+                  items={planItems}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onAddChild={handleAddChild}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Import CSV Tab */}
+        <TabsContent value="import">
+          <PlanImport />
+        </TabsContent>
+      </Tabs>
 
       {/* Add Dialog */}
       <AddPlanItemDialog

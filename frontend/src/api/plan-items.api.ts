@@ -11,6 +11,19 @@ export interface ListPlanItemsParams {
   itemTypeId?: number;
 }
 
+export interface CsvPreviewResponse {
+  headers: string[];
+  rows: Record<string, string>[];
+  errors: string[];
+}
+
+export interface ImportResult {
+  totalRows: number;
+  itemsCreated: number;
+  itemsUpdated: number;
+  errors: Array<{ row: number; error: string }>;
+}
+
 export const planItemsApi = {
   // Get full plan tree for a project
   getProjectPlan: async (projectId: string, params?: ListPlanItemsParams): Promise<ApiResponse<PlanTreeResponse>> => {
@@ -52,6 +65,32 @@ export const planItemsApi = {
   getTypes: async (): Promise<ApiResponse<PlanItemType[]>> => {
     const response = await apiClient.get('/plan-item-types');
     return response.data;
+  },
+
+  // Preview CSV import
+  previewImport: async (projectId: string, file: File): Promise<ApiResponse<CsvPreviewResponse>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post(`/projects/${projectId}/plan/import/preview`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Import plan items from CSV
+  importCsv: async (projectId: string, file: File): Promise<ApiResponse<ImportResult>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post(`/projects/${projectId}/plan/import`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Get CSV import template URL
+  getTemplateUrl: (): string => {
+    const baseUrl = apiClient.defaults.baseURL || '';
+    return `${baseUrl}/plan-items/import/template`;
   },
 };
 

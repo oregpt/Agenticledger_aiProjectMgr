@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import * as projectsController from './projects.controller.js';
 import * as planItemsController from '../plan-items/plan-items.controller.js';
 import { validateBody, validateQuery } from '../../middleware/validation.js';
@@ -13,6 +14,19 @@ import {
   createPlanItemSchema,
   listPlanItemsQuerySchema,
 } from '../plan-items/plan-items.schema.js';
+
+// Configure multer for CSV upload (memory storage, 5MB limit)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  },
+});
 
 const router = Router();
 
@@ -69,6 +83,20 @@ router.post(
   '/:projectId/plan',
   validateBody(createPlanItemSchema),
   planItemsController.createPlanItem
+);
+
+// POST /api/projects/:projectId/plan/import/preview - Preview CSV import
+router.post(
+  '/:projectId/plan/import/preview',
+  upload.single('file'),
+  planItemsController.previewCsvImport
+);
+
+// POST /api/projects/:projectId/plan/import - Import plan items from CSV
+router.post(
+  '/:projectId/plan/import',
+  upload.single('file'),
+  planItemsController.importPlanItems
 );
 
 export default router;
