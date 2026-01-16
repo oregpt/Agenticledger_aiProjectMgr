@@ -85,8 +85,8 @@
         "Create frontend/src/stores/projectStore.ts for project state"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Inline editing not implemented - using edit dialog instead. Context menu replaced with dropdown menu for Edit/Delete."
     },
     {
       "id": "US-004",

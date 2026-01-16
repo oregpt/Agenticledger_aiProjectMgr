@@ -52,4 +52,75 @@ Multi-tenant AI-powered project management and status reporting tool.
   - tsconfig.json had seed.ts included but outside rootDir - removed to fix type check errors
   - Pre-existing TypeScript errors in starter code (Express Request generic typing) - runtime works fine
   - Always use findFirst with organizationId check for multi-tenancy isolation
+
+## 2026-01-16 - US-002
+- Added PlanItemType model: id, organizationId (nullable for global), name, slug, description, level, icon, color, isSystem, isActive
+- Added PlanItem model with self-referential hierarchy: id, projectId, parentId, itemTypeId, name, description, owner, status, dates, notes, references[], sortOrder, path (materialized), depth
+- Added PlanItemHistory model for audit trail
+- Created backend/src/modules/plan-items/ with:
+  - plan-items.schema.ts - Zod validation including BulkUpdateInput
+  - plan-items.service.ts - Full CRUD + tree building + history tracking + bulk update
+  - plan-items.controller.ts - HTTP handlers with RequestHandler pattern
+  - plan-items.routes.ts - Express routes for /api/plan-items
+  - plan-item-types.routes.ts - Routes for /api/plan-item-types
+- Added nested routes to projects: GET/POST /api/projects/:projectId/plan
+- Seeded default PlanItemTypes: workstream(1), milestone(2), activity(3), task(4), subtask(5)
+- Implemented endpoints:
+  - GET /api/projects/:id/plan - returns full tree structure
+  - POST /api/projects/:id/plan - create plan item in project
+  - GET /api/plan-items/:id - get single item with children
+  - PUT /api/plan-items/:id - update item (creates history records)
+  - DELETE /api/plan-items/:id - soft delete with cascade to children
+  - GET /api/plan-item-types - get all types for organization
+- **Files changed:**
+  - backend/prisma/schema.prisma (added 3 models + relations)
+  - backend/prisma/migrations/20260116231915_add_plan_items/
+  - backend/prisma/seed.ts (added PlanItemType seeding)
+  - backend/src/modules/plan-items/* (new)
+  - backend/src/modules/projects/projects.routes.ts (added nested plan routes)
+  - backend/src/app.ts (registered routes)
+- **Learnings:**
+  - Materialized path pattern (/uuid1/uuid2/uuid3) enables efficient hierarchy queries
+  - Self-referential relation needs explicit name ("PlanItemHierarchy")
+  - Prisma $transaction accepts array of operations for atomic updates
+  - ErrorCodes should use VALIDATION_ERROR for business logic errors (no BAD_REQUEST)
+  - RequestHandler type from express avoids strict query parameter type issues
+
+## 2026-01-16 - US-003
+- Created complete Plan view UI with tree display
+- Created components:
+  - PlanPage.tsx - Main plan page with project info card and plan tree
+  - ProjectSwitcher.tsx - Dropdown to select active project
+  - PlanTree.tsx - Recursive tree component with expand/collapse
+  - PlanItemCard.tsx - Individual item display with status badges
+  - StatusBadge.tsx - Color-coded status indicators
+  - AddPlanItemDialog.tsx - Dialog for adding new plan items
+  - EditPlanItemDialog.tsx - Dialog for editing existing plan items
+- Created supporting files:
+  - plan-items.api.ts - API calls to plan items endpoints
+  - projects.api.ts - API calls to projects endpoints
+  - projectStore.ts - Zustand store for project state
+  - vite-env.d.ts - Vite TypeScript type declarations
+- Updated Sidebar with Plan menu item (icon: ListTree)
+- Updated seed.ts with Plan menu and permissions for all roles
+- Added /plan route to App.tsx
+- Fixed pre-existing unused import warnings in starter code
+- **Files changed:**
+  - frontend/src/pages/plan/PlanPage.tsx (new)
+  - frontend/src/components/plan/* (new - 6 files)
+  - frontend/src/api/plan-items.api.ts (new)
+  - frontend/src/api/projects.api.ts (new)
+  - frontend/src/stores/projectStore.ts (new)
+  - frontend/src/types/index.ts (added Project, PlanItem, PlanItemType types)
+  - frontend/src/App.tsx (added /plan route)
+  - frontend/src/components/layout/Sidebar.tsx (added ListTree icon)
+  - frontend/src/vite-env.d.ts (new)
+  - backend/prisma/seed.ts (added Plan menu)
+- **Learnings:**
+  - Vite needs vite-env.d.ts with `/// <reference types="vite/client" />` for import.meta.env types
+  - Zustand persist middleware can selectively persist only certain state fields (partialize)
+  - Tree components benefit from separating expanded state from the tree data
+  - shadcn/ui Dialog uses controlled open/onOpenChange pattern
+  - PlanItemType id is number (autoincrement from Prisma) not UUID - check types carefully
+  - Parent type level + 1 gives suggested child type for Add Child functionality
 ---
