@@ -1,0 +1,401 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ORGANIZATIONS
+// ============================================================================
+
+model Organization {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logoUrl     String?
+
+  // Platform org flag (id=1, slug="platform")
+  isPlatform  Boolean  @default(false)
+
+  // Soft delete
+  isActive    Boolean  @default(true)
+  deletedAt   DateTime?
+
+  // Organization-specific configurations (JSONB)
+  config      Json     @default("{}")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users               OrganizationUser[]
+  roles               Role[]
+  featureFlags        OrganizationFeatureFlag[]
+  invitations         Invitation[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+// ============================================================================
+// USERS
+// ============================================================================
+
+model User {
+  id                  Int       @id @default(autoincrement())
+  uuid                String    @unique @default(uuid())
+  email               String    @unique
+  passwordHash        String
+
+  // Profile
+  firstName           String
+  lastName            String
+  avatarUrl           String?
+
+  // Email verification
+  emailVerified       Boolean   @default(false)
+  emailVerifiedAt     DateTime?
+  emailVerificationToken String? @unique
+  emailVerificationExpires DateTime?
+
+  // Password reset
+  passwordResetToken  String?   @unique
+  passwordResetExpires DateTime?
+
+  // Account status
+  isActive            Boolean   @default(true)
+  lastLoginAt         DateTime?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  organizations       OrganizationUser[]
+  refreshTokens       RefreshToken[]
+  invitationsSent     Invitation[]       @relation("InvitationSender")
+
+  @@index([email])
+  @@index([isActive])
+}
+
+// ============================================================================
+// USER-ORGANIZATION MEMBERSHIP (Many-to-Many with Role)
+// ============================================================================
+
+model OrganizationUser {
+  id             Int          @id @default(autoincrement())
+
+  userId         Int
+  organizationId Int
+  roleId         Int
+
+  // Membership status
+  isActive       Boolean      @default(true)
+  joinedAt       DateTime     @default(now())
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           Role         @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([roleId])
+}
+
+// ============================================================================
+// ROLES
+// ============================================================================
+
+model Role {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(uuid())
+  name           String
+  slug           String
+  description    String?
+
+  // Role hierarchy level (higher = more permissions)
+  // 10=viewer, 20=standard, 30=advanced, 40=org_admin, 100=platform_admin
+  level          Int          @default(10)
+
+  // System roles cannot be deleted or modified
+  isSystem       Boolean      @default(false)
+
+  // Scope: "platform" = available across platform, "organization" = org-specific
+  scope          RoleScope    @default(ORGANIZATION)
+
+  // If org-specific, which org owns it (null for platform-level roles)
+  organizationId Int?
+
+  // Base role this was created from (for inheritance)
+  baseRoleId     Int?
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  baseRole       Role?        @relation("RoleInheritance", fields: [baseRoleId], references: [id])
+  derivedRoles   Role[]       @relation("RoleInheritance")
+  permissions    RolePermission[]
+  users          OrganizationUser[]
+
+  @@unique([slug, organizationId])
+  @@index([scope])
+  @@index([level])
+}
+
+enum RoleScope {
+  PLATFORM
+  ORGANIZATION
+}
+
+// ============================================================================
+// MENUS (Pages/Sections in the UI)
+// ============================================================================
+
+model Menu {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String?
+
+  // Menu hierarchy
+  parentId     Int?
+  parent       Menu?    @relation("MenuHierarchy", fields: [parentId], references: [id])
+  children     Menu[]   @relation("MenuHierarchy")
+
+  // UI properties
+  icon         String?
+  path         String
+  sortOrder    Int      @default(0)
+
+  // Visibility
+  isActive     Boolean  @default(true)
+
+  // Menu section
+  section      MenuSection @default(MAIN)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  permissions  RolePermission[]
+
+  @@index([section])
+  @@index([parentId])
+}
+
+enum MenuSection {
+  MAIN
+  ADMIN
+  PLATFORM_ADMIN
+}
+
+// ============================================================================
+// PERMISSIONS (CRUD per Menu per Role)
+// ============================================================================
+
+model RolePermission {
+  id         Int      @id @default(autoincrement())
+
+  roleId     Int
+  menuId     Int
+
+  // CRUD permissions
+  canCreate  Boolean  @default(false)
+  canRead    Boolean  @default(false)
+  canUpdate  Boolean  @default(false)
+  canDelete  Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  menu       Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, menuId])
+  @@index([roleId])
+  @@index([menuId])
+}
+
+// ============================================================================
+// FEATURE FLAGS
+// ============================================================================
+
+model FeatureFlag {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(uuid())
+  key          String   @unique
+  name         String
+  description  String?
+
+  // Default state
+  defaultEnabled Boolean @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  organizationOverrides OrganizationFeatureFlag[]
+
+  @@index([key])
+}
+
+model OrganizationFeatureFlag {
+  id              Int      @id @default(autoincrement())
+
+  organizationId  Int
+  featureFlagId   Int
+
+  // Platform Admin sets this
+  platformEnabled Boolean  @default(false)
+
+  // Org Admin can turn OFF (but not ON if platform disabled)
+  orgEnabled      Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  featureFlag     FeatureFlag  @relation(fields: [featureFlagId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, featureFlagId])
+  @@index([organizationId])
+}
+
+// ============================================================================
+// PLATFORM SETTINGS
+// ============================================================================
+
+model PlatformSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String
+  type        SettingType @default(STRING)
+  description String?
+
+  // Grouping for UI
+  category    String   @default("general")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+// ============================================================================
+// INVITATIONS
+// ============================================================================
+
+model Invitation {
+  id             Int       @id @default(autoincrement())
+  uuid           String    @unique @default(uuid())
+
+  email          String
+  organizationId Int
+  roleId         Int
+
+  // Invitation token
+  token          String    @unique
+  expiresAt      DateTime
+
+  // Status
+  status         InvitationStatus @default(PENDING)
+  acceptedAt     DateTime?
+
+  // Who sent it
+  invitedById    Int
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy      User         @relation("InvitationSender", fields: [invitedById], references: [id])
+
+  @@index([token])
+  @@index([email])
+  @@index([organizationId])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+// ============================================================================
+// REFRESH TOKENS
+// ============================================================================
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Device info for session management
+  userAgent String?
+  ipAddress String?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// AUDIT LOG
+// ============================================================================
+
+model AuditLog {
+  id             Int      @id @default(autoincrement())
+
+  // Who
+  userId         Int?
+  userEmail      String?
+
+  // What
+  action         String
+  entityType     String
+  entityId       Int?
+
+  // Context
+  organizationId Int?
+
+  // Details
+  metadata       Json     @default("{}")
+  ipAddress      String?
+  userAgent      String?
+
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([organizationId])
+  @@index([createdAt])
+}

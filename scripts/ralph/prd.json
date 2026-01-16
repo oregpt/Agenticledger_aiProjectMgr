@@ -1,0 +1,440 @@
+{
+  "projectName": "AI Project Manager",
+  "branchName": "main",
+  "description": "Multi-tenant AI-powered project management and status reporting tool for consultants. Users dump raw content and AI organizes, analyzes, and formats it into status reports.",
+  "techStack": {
+    "framework": "Node.js + Express (backend), React + Vite (frontend)",
+    "database": "PostgreSQL 15 with pgvector",
+    "styling": "Tailwind CSS + shadcn/ui",
+    "testing": "Custom test runner + Jest"
+  },
+  "userStories": [
+    {
+      "id": "US-000",
+      "title": "Copy multitenancy starter as project base",
+      "acceptanceCriteria": [
+        "Copy all files from C:\\Users\\oreph\\Documents\\AgenticLedger\\Custom Applications\\Applets\\Mutltitenantandauthentication to this project",
+        "PRESERVE scripts/ralph/ directory - do NOT overwrite",
+        "PRESERVE SPEC.md - do NOT overwrite",
+        "Update package.json name to 'ai-project-manager'",
+        "Update any hardcoded project names in the codebase",
+        "Run npm install in both backend/ and frontend/",
+        "Verify backend starts: cd backend && npm run dev",
+        "Verify frontend starts: cd frontend && npm run dev",
+        "VERIFY scripts/ralph/prd.json still exists after copy"
+      ],
+      "priority": 0,
+      "passes": false,
+      "notes": "CRITICAL: Do not overwrite scripts/ralph/ or SPEC.md when copying starter"
+    },
+    {
+      "id": "US-001",
+      "title": "Add Project model and CRUD endpoints",
+      "acceptanceCriteria": [
+        "Add Project model to Prisma schema with fields: id (UUID), organizationId, name, client, description, startDate, targetEndDate, status, statusConfig (JSONB), isActive, timestamps",
+        "Add unique constraint on (organizationId, name)",
+        "Create backend/src/modules/projects/ with controller, service, routes, schema",
+        "Implement GET /api/projects - list org projects (filtered by organizationId from context)",
+        "Implement GET /api/projects/:id - get single project",
+        "Implement POST /api/projects - create project",
+        "Implement PUT /api/projects/:id - update project",
+        "Implement DELETE /api/projects/:id - soft delete (set isActive: false)",
+        "Run npx prisma migrate dev to apply schema",
+        "Test all endpoints work correctly"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Add PlanItemType and PlanItem models with hierarchy",
+      "acceptanceCriteria": [
+        "Add PlanItemType model: id, organizationId (nullable for global), name, slug, description, level (1-5), icon, color, isSystem, isActive",
+        "Add PlanItem model: id, projectId, parentId (self-ref), itemTypeId, name, description, owner, status, startDate, targetEndDate, actualStartDate, actualEndDate, notes, references (UUID[]), sortOrder, path (materialized), depth, timestamps",
+        "Add PlanItemHistory model for audit trail",
+        "Seed default PlanItemTypes: workstream(1), milestone(2), activity(3), task(4), subtask(5)",
+        "Create backend/src/modules/plan-items/ with controller, service, routes",
+        "Implement GET /api/projects/:id/plan - returns full tree structure",
+        "Implement GET /api/plan-items/:id - get single item with children",
+        "Implement POST /api/plan-items - create item (auto-calculate path and depth)",
+        "Implement PUT /api/plan-items/:id - update item (create history record)",
+        "Implement DELETE /api/plan-items/:id - delete with cascade to children",
+        "Run migration and verify"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Path format: /uuid1/uuid2/uuid3 for fast hierarchy queries"
+    },
+    {
+      "id": "US-003",
+      "title": "Create Plan view UI with tree display",
+      "acceptanceCriteria": [
+        "Create frontend/src/pages/plan/PlanPage.tsx as main page",
+        "Create ProjectSwitcher component in header to select active project",
+        "Create frontend/src/components/plan/PlanTree.tsx - recursive tree component",
+        "Create frontend/src/components/plan/PlanItemCard.tsx - individual item display",
+        "Display hierarchy with expand/collapse functionality",
+        "Show status badge with appropriate color for each item",
+        "Show owner, dates, progress indicator where applicable",
+        "Add 'Add Item' button that opens create dialog",
+        "Create dialog form for adding new plan items with type selector",
+        "Support inline editing of item name on double-click",
+        "Add context menu (right-click) with Edit, Delete options",
+        "Create frontend/src/api/plan-items.api.ts for API calls",
+        "Create frontend/src/stores/projectStore.ts for project state"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Implement CSV import for plan items",
+      "acceptanceCriteria": [
+        "Create Plan Import sub-tab in Plan page",
+        "Create file upload dropzone for CSV files",
+        "Define CSV format: project, workstream, milestone, activity, task, subtask, status, owner, start_date, target_end_date, notes",
+        "Implement POST /api/projects/:id/plan/import endpoint",
+        "Parse CSV row by row, creating hierarchy based on which columns are filled",
+        "Find-or-create logic for each level (match by name within parent)",
+        "Apply status, owner, dates, notes to the deepest item in each row",
+        "Return import summary: items created, items updated, errors",
+        "Show preview of parsed data before import",
+        "Show import results with success/error counts",
+        "Create sample CSV template for download"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Add ContentType, ActivityItemType, and ContentItem models",
+      "acceptanceCriteria": [
+        "Add ContentType model: id, organizationId, name, slug, description, icon, color, isSystem, isActive",
+        "Add ActivityItemType model: same structure as ContentType",
+        "Add ContentItem model per SPEC.md: id, projectId, planItemIds[], contentTypeIds[], activityTypeIds[], sourceType, title, dateOccurred, projectWeek, tags[], rawContent, fileReference, fileName, fileSize, mimeType, aiSummary, aiExtractedEntities, processingStatus, parentItemId, createdBy, createdByUserId, timestamps",
+        "Seed default ContentTypes: meeting, document, email, note, transcript",
+        "Seed default ActivityItemTypes: status_update, action_item, risk, decision, blocker, milestone_update, dependency",
+        "Create backend/src/modules/content-items/ with CRUD endpoints",
+        "Implement GET /api/projects/:id/content - list with filters",
+        "Implement POST /api/content-items - create content item",
+        "Run migration and verify"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Create Intake Agent UI with form",
+      "acceptanceCriteria": [
+        "Create frontend/src/pages/intake/IntakePage.tsx as main page",
+        "Create intake form with cascading dropdowns: Workstream → Activity → Task → Subtask",
+        "Dropdowns filter based on parent selection",
+        "Add multi-select for Content Type (meeting, document, etc.)",
+        "Add multi-select for Activity Type (status_update, action_item, etc.)",
+        "Add required date picker for 'Date Occurred'",
+        "Add tags input field",
+        "Create content drop zone that accepts: text paste, file upload (PDF, DOCX, TXT, MD)",
+        "Show uploaded file name and size",
+        "Add Submit button that saves content item",
+        "Create frontend/src/api/content-items.api.ts for API calls",
+        "Show success message with created item details"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Set up OpenAI integration and pgvector",
+      "acceptanceCriteria": [
+        "Install openai package in backend",
+        "Create backend/src/config/ai.ts with OpenAI configuration",
+        "Create backend/src/services/ai/openai.service.ts with client initialization",
+        "Add OPENAI_API_KEY to .env.example",
+        "Enable pgvector extension in PostgreSQL: CREATE EXTENSION IF NOT EXISTS vector",
+        "Add ContentChunk model with embedding column: vector(1536)",
+        "Create backend/src/services/ai/embedding.service.ts for generating embeddings",
+        "Implement function to chunk text into ~500-1000 token chunks",
+        "Implement function to generate embeddings using text-embedding-3-small",
+        "Create cosine similarity search function for RAG queries",
+        "Run migration for ContentChunk table",
+        "Test embedding generation works"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Requires OpenAI API key in environment"
+    },
+    {
+      "id": "US-008",
+      "title": "Implement Intake Agent AI analysis",
+      "acceptanceCriteria": [
+        "Create backend/src/services/ai/prompts/intake-agent.ts with analysis prompt",
+        "Create backend/src/modules/content-items/analyze.service.ts",
+        "Implement POST /api/content-items/analyze endpoint",
+        "Analyze content to detect: content types, activity types, plan item links",
+        "Extract: status updates, action items (with owner/due date), risks, decisions",
+        "Suggest content types if user didn't select any",
+        "Suggest plan item links based on content",
+        "Return structured JSON with suggestions and confidence levels",
+        "Update intake form to show AI suggestions panel after submit",
+        "Allow user to Accept All, Edit, or Just Store Raw",
+        "When accepting, create multiple ContentItems if AI extracted items",
+        "Set parentItemId to link extracted items to original",
+        "Chunk content and generate embeddings on save"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Implement Activity Reporter (Agent 2)",
+      "acceptanceCriteria": [
+        "Create frontend/src/pages/reporter/ReporterPage.tsx",
+        "Create report parameters form: period selector (This Week, Last Week, Custom), workstream filter, activity type filter",
+        "Create backend/src/modules/activity-reporter/ module",
+        "Implement POST /api/projects/:id/activity-report endpoint",
+        "Use RAG to query relevant content chunks for the period",
+        "Create backend/src/services/ai/prompts/activity-reporter.ts with report generation prompt",
+        "Generate structured report with: summary, status_updates[], action_items[], risks[], decisions[]",
+        "Each item must link to source ContentItem with confidence score",
+        "Group activity by plan item (workstream/activity)",
+        "Suggest status changes for plan items mentioned",
+        "Save generated report to ActivityReport table",
+        "Display report in UI with collapsible sections",
+        "Add View Source button to see original content for each item",
+        "Add export buttons: Markdown, PowerPoint"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Implement Plan Updater (Agent 0)",
+      "acceptanceCriteria": [
+        "Add Plan Updater sub-tab to Plan page",
+        "Create parameters form: period selector matching Activity Reporter",
+        "Create 'Load Activity & Suggest Updates' button",
+        "Create backend/src/modules/plan-updater/ module",
+        "Implement POST /api/projects/:id/plan-suggestions endpoint",
+        "Load activity report for the period",
+        "Compare activity against current plan state",
+        "Use AI to suggest: status changes, new notes, date updates",
+        "Include evidence links (ContentItem IDs) for each suggestion",
+        "Auto-suggest parent completion when all children complete",
+        "Detect new risks and suggest adding to plan item notes",
+        "Display suggestions as checkable cards with evidence preview",
+        "Add 'View Evidence' expand to see source content",
+        "Implement Apply Selected Updates button",
+        "Implement POST /api/plan-items/bulk-update endpoint",
+        "Create PlanItemHistory records for all changes",
+        "Link references[] to source ContentItems"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Implement Output Formatter (Agent 3)",
+      "acceptanceCriteria": [
+        "Create backend/src/modules/output-formatter/ module",
+        "Implement POST /api/format/markdown endpoint",
+        "Accept source_type (plan, activity_report, combined) and data object",
+        "Generate clean markdown using templates from prompt.md",
+        "Return { content: string, filename: string }",
+        "Implement POST /api/format/pptx endpoint",
+        "Install pptxgenjs package for PowerPoint generation",
+        "Create slide templates: Title, Summary, Status Updates, Action Items, Risks",
+        "Generate proper .pptx binary",
+        "Return file for download",
+        "Add download buttons to Activity Reporter page",
+        "Wire up Export Markdown and Export PowerPoint buttons"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Create Admin Configuration UI",
+      "acceptanceCriteria": [
+        "Create frontend/src/pages/admin/AdminPage.tsx",
+        "Create sub-tabs: Projects, Plan Item Types, Content Types, Activity Types",
+        "Projects tab: table with name, client, start date, status, actions (Edit, View)",
+        "Create project dialog for create/edit",
+        "Plan Item Types tab: table with name, slug, level, system flag, active flag",
+        "Allow create/edit custom types (cannot edit system types)",
+        "Content Types tab: table with name, slug, description, system flag",
+        "Allow create/edit custom content types",
+        "Activity Types tab: table with name, slug, description, system flag",
+        "Allow create/edit custom activity types",
+        "Implement backend endpoints for type CRUD: /api/config/plan-item-types, /api/config/content-types, /api/config/activity-types",
+        "Add search/filter to all tables"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Create main app layout with 4 agent tabs",
+      "acceptanceCriteria": [
+        "Update frontend/src/App.tsx with new routes",
+        "Create main layout with header: Logo, App Name, Project Switcher, Org Switcher, User Menu",
+        "Create tab navigation with 4 tabs: Plan Agent, Intake Agent, Activity Reporter, Admin",
+        "Style tabs to look professional (use design system from SPEC.md)",
+        "Plan Agent tab links to /plan",
+        "Intake Agent tab links to /intake",
+        "Activity Reporter tab links to /reporter",
+        "Admin tab links to /admin",
+        "Add Settings page at /settings for user preferences",
+        "Highlight active tab",
+        "Ensure all tabs require authentication",
+        "Ensure all tabs require project selection (except Admin)",
+        "Show 'Select a Project' message if no project selected"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "This is the main navigation structure"
+    },
+    {
+      "id": "US-014",
+      "title": "Add file upload support for PDF and DOCX",
+      "acceptanceCriteria": [
+        "Install pdf-parse and mammoth packages in backend",
+        "Create backend/src/services/file-processing/pdf.service.ts",
+        "Create backend/src/services/file-processing/docx.service.ts",
+        "Implement text extraction from PDF files",
+        "Implement text extraction from DOCX files",
+        "Update content-items POST endpoint to handle file uploads",
+        "Use multer middleware for file handling",
+        "Store files in uploads/ directory with UUID names",
+        "Extract text and store in rawContent field",
+        "Store original filename, size, mimeType",
+        "Handle extraction errors gracefully",
+        "Test with sample PDF and DOCX files"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Polish UI with design system colors and typography",
+      "acceptanceCriteria": [
+        "Update tailwind.config.js with color palette from SPEC.md",
+        "Add primary (deep blue), neutral (slate), status colors",
+        "Add Inter font from Google Fonts",
+        "Create consistent card styling with rounded corners and subtle shadows",
+        "Create StatusBadge component with proper colors per status",
+        "Style buttons consistently (primary, secondary, ghost variants)",
+        "Style form inputs with focus states",
+        "Add subtle hover animations to interactive elements",
+        "Ensure consistent spacing using 8px base unit",
+        "Style tables consistently across all pages",
+        "Add loading states and skeletons",
+        "Test responsive design on different screen sizes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Use design system from SPEC.md"
+    },
+
+    {
+      "_comment": "========== RELEASE PHASE - DO NOT REMOVE ==========",
+      "_description": "These stories run after all US-XXX features are complete"
+    },
+
+    {
+      "id": "REL-001",
+      "title": "Create platform-overview.md with domain documentation",
+      "acceptanceCriteria": [
+        "Analyze all completed features and group into logical domains (D1-D7 per SPEC.md)",
+        "Create platform-overview.md in project root",
+        "Include platform summary section with purpose and tech stack",
+        "Document each domain: name, purpose, features, API endpoints, key files",
+        "Include domain relationship map showing how domains interact",
+        "List all API endpoints organized by domain",
+        "Include getting started instructions",
+        "Include environment variables documentation"
+      ],
+      "priority": 900,
+      "passes": false,
+      "notes": "See prompt.md for platform-overview.md structure template"
+    },
+    {
+      "id": "REL-002",
+      "title": "Create comprehensive-test-suite with domain-organized automated tests",
+      "acceptanceCriteria": [
+        "Create comprehensive-test-suite/ folder in project root",
+        "Create utils/ subfolder with testRunner.ts and testHelpers.ts",
+        "Create d1/ through d7/ folders for each domain",
+        "In each domain folder: create ENDPOINTS.md documenting what is tested",
+        "In each domain folder: create {domain}Endpoints.test.ts with actual tests",
+        "Write tests for ALL API endpoints (minimum: success case + error case)",
+        "Create runTests.ts master runner that can run all or specific domain tests",
+        "Tests must be runnable via: npx tsx comprehensive-test-suite/runTests.ts"
+      ],
+      "priority": 901,
+      "passes": false,
+      "notes": "See prompt.md for test file templates"
+    },
+    {
+      "id": "REL-003",
+      "title": "Run comprehensive test suite and verify all tests pass",
+      "acceptanceCriteria": [
+        "Execute: npx tsx comprehensive-test-suite/runTests.ts",
+        "All tests pass with 0 failures",
+        "If any tests fail: fix the issue (code bug or test bug) and re-run",
+        "Document final test results: total tests, passed, failed, skipped",
+        "No tests should be skipped without documented reason"
+      ],
+      "priority": 902,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "REL-004",
+      "title": "Browser test UI functionality using Claude-in-Chrome",
+      "acceptanceCriteria": [
+        "Ensure application servers are running (backend on 5000, frontend on 5173)",
+        "Use mcp__claude-in-chrome__tabs_context_mcp to get browser context",
+        "Create new tab and navigate to http://localhost:5173",
+        "Login with test credentials: admin@example.com / password123",
+        "Test Plan Agent tab: view plan tree, expand/collapse, add item",
+        "Test Intake Agent tab: fill form, submit content",
+        "Test Activity Reporter tab: generate report",
+        "Test Admin tab: view projects, types",
+        "Take screenshots of key screens",
+        "Document any UI issues found in RELEASE_CHECKLIST.md"
+      ],
+      "priority": 903,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "REL-005",
+      "title": "Create final RELEASE_CHECKLIST.md summary",
+      "acceptanceCriteria": [
+        "Create RELEASE_CHECKLIST.md in project root",
+        "Status: Complete with completion date",
+        "List all features implemented (from US-XXX stories)",
+        "List all domains documented in platform-overview.md",
+        "Include test coverage summary: X tests across Y domains",
+        "Include backend test results: all passed / X failures",
+        "Include browser test results: all features verified / issues found",
+        "List any known issues or limitations discovered",
+        "List suggested future improvements"
+      ],
+      "priority": 904,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
