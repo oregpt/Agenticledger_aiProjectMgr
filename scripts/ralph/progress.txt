@@ -12,6 +12,44 @@ Multi-tenant AI-powered project management and status reporting tool.
 ---
 
 ## Session Log
-(Story completions will be logged here)
 
+## 2025-01-16 - US-000
+- Copied multitenancy starter (backend + frontend) from Applets/Mutltitenantandauthentication
+- Preserved scripts/ralph/, SPEC.md, README.md
+- Package names already set to ai-project-manager-backend and ai-project-manager-frontend
+- Initialized git repository
+- Created initial commit with 134 files
+- **Files changed:** backend/*, frontend/*, .gitignore
+- **Learnings:**
+  - Windows copy commands have issues with bash cp - use PowerShell Copy-Item for reliability
+  - Nested copy can happen with Copy-Item -Recurse - verify structure after copy
+  - node_modules were copied but will need reinstall after .env setup
+---
+
+## 2026-01-16 - US-001
+- Added Project model to Prisma schema with all required fields (UUID id, organizationId, name, client, description, startDate, targetEndDate, status, statusConfig JSON, isActive)
+- Added unique constraint on (organizationId, name)
+- Created backend/src/modules/projects/ with:
+  - projects.schema.ts - Zod validation schemas
+  - projects.service.ts - Business logic with CRUD operations
+  - projects.controller.ts - HTTP handlers
+  - projects.routes.ts - Express route definitions
+- Registered routes in app.ts at /api/projects
+- All endpoints tested and working:
+  - GET /api/projects - list org projects
+  - GET /api/projects/:id - get single project
+  - POST /api/projects - create project
+  - PUT /api/projects/:id - update project
+  - DELETE /api/projects/:id - soft delete
+- **Files changed:**
+  - backend/prisma/schema.prisma
+  - backend/prisma/migrations/20260116230950_add_project_model/
+  - backend/src/modules/projects/* (new)
+  - backend/src/app.ts
+  - backend/tsconfig.json
+- **Learnings:**
+  - JSON fields in Prisma need explicit cast to Prisma.InputJsonValue when assigning
+  - tsconfig.json had seed.ts included but outside rootDir - removed to fix type check errors
+  - Pre-existing TypeScript errors in starter code (Express Request generic typing) - runtime works fine
+  - Always use findFirst with organizationId check for multi-tenancy isolation
 ---

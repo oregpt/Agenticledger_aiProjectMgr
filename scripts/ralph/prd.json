@@ -24,7 +24,7 @@
         "VERIFY scripts/ralph/prd.json still exists after copy"
       ],
       "priority": 0,
-      "passes": false,
+      "passes": true,
       "notes": "CRITICAL: Do not overwrite scripts/ralph/ or SPEC.md when copying starter"
     },
     {
@@ -43,7 +43,7 @@
         "Test all endpoints work correctly"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

@@ -15,6 +15,7 @@ import platformSettingsRoutes from './modules/platform-settings/platform-setting
 import platformRoutes from './modules/platform/platform.routes.js';
 import invitationsRoutes from './modules/invitations/invitations.routes.js';
 import menusRoutes from './modules/menus/menus.routes.js';
+import projectsRoutes from './modules/projects/projects.routes.js';
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use('/api/platform-settings', platformSettingsRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/invitations', invitationsRoutes);
 app.use('/api/menus', menusRoutes);
+app.use('/api/projects', projectsRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
