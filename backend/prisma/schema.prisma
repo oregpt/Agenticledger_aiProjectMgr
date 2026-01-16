@@ -40,6 +40,7 @@ model Organization {
   featureFlags        OrganizationFeatureFlag[]
   invitations         Invitation[]
   projects            Project[]
+  planItemTypes       PlanItemType[]
 
   @@index([slug])
   @@index([isActive])
@@ -75,11 +76,136 @@ model Project {
 
   // Relations
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  planItems       PlanItem[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
   @@index([status])
   @@index([isActive])
+}
+
+// ============================================================================
+// PLAN ITEM TYPES (Hierarchy Levels)
+// ============================================================================
+
+model PlanItemType {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(uuid())
+
+  // Nullable for global/system types, set for org-specific
+  organizationId Int?
+
+  name           String
+  slug           String
+  description    String?
+
+  // Hierarchy level: 1=workstream, 2=milestone, 3=activity, 4=task, 5=subtask
+  level          Int          @default(1)
+
+  // UI properties
+  icon           String?
+  color          String?
+
+  // System types cannot be deleted or modified by org admins
+  isSystem       Boolean      @default(false)
+  isActive       Boolean      @default(true)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  planItems      PlanItem[]
+
+  @@unique([slug, organizationId])
+  @@index([level])
+  @@index([isActive])
+}
+
+// ============================================================================
+// PLAN ITEMS (Hierarchical Project Plan Structure)
+// ============================================================================
+
+model PlanItem {
+  id              String    @id @default(uuid())
+  projectId       String
+
+  // Self-referential hierarchy
+  parentId        String?
+
+  // Type determines the level (workstream, milestone, etc.)
+  itemTypeId      Int
+
+  // Core fields
+  name            String
+  description     String?
+  owner           String?
+
+  // Status: not_started, in_progress, completed, on_hold, cancelled
+  status          String    @default("not_started")
+
+  // Dates
+  startDate       DateTime? @db.Date
+  targetEndDate   DateTime? @db.Date
+  actualStartDate DateTime? @db.Date
+  actualEndDate   DateTime? @db.Date
+
+  // Notes and references (links to ContentItems)
+  notes           String?
+  references      String[]  @default([])
+
+  // Tree structure optimization
+  sortOrder       Int       @default(0)
+  path            String    @default("")  // Materialized path: /uuid1/uuid2/uuid3
+  depth           Int       @default(0)
+
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent          PlanItem? @relation("PlanItemHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children        PlanItem[] @relation("PlanItemHierarchy")
+  itemType        PlanItemType @relation(fields: [itemTypeId], references: [id])
+  history         PlanItemHistory[]
+
+  @@index([projectId])
+  @@index([parentId])
+  @@index([itemTypeId])
+  @@index([status])
+  @@index([path])
+  @@index([isActive])
+}
+
+// ============================================================================
+// PLAN ITEM HISTORY (Audit Trail)
+// ============================================================================
+
+model PlanItemHistory {
+  id              Int       @id @default(autoincrement())
+  planItemId      String
+
+  // What changed
+  field           String
+  oldValue        String?
+  newValue        String?
+
+  // Who changed it
+  changedByUserId Int?
+  changedByEmail  String?
+
+  // Context
+  changeReason    String?
+
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  planItem        PlanItem  @relation(fields: [planItemId], references: [id], onDelete: Cascade)
+
+  @@index([planItemId])
+  @@index([createdAt])
 }
 
 // ============================================================================

@@ -339,6 +339,35 @@ async function main() {
   });
   console.log('Assigned org admin to sample organization');
 
+  // ============================================================================
+  // 9. Create Default PlanItemTypes (Global - no organizationId)
+  // ============================================================================
+  console.log('Creating default plan item types...');
+
+  const planItemTypes = [
+    { name: 'Workstream', slug: 'workstream', description: 'High-level work category or stream', level: 1, icon: 'Layers', color: '#3b82f6', isSystem: true },
+    { name: 'Milestone', slug: 'milestone', description: 'Key project milestone or checkpoint', level: 2, icon: 'Flag', color: '#10b981', isSystem: true },
+    { name: 'Activity', slug: 'activity', description: 'A specific activity within a milestone', level: 3, icon: 'Activity', color: '#8b5cf6', isSystem: true },
+    { name: 'Task', slug: 'task', description: 'A task to be completed', level: 4, icon: 'CheckSquare', color: '#f59e0b', isSystem: true },
+    { name: 'Subtask', slug: 'subtask', description: 'A subtask within a task', level: 5, icon: 'Check', color: '#6b7280', isSystem: true },
+  ];
+
+  for (const type of planItemTypes) {
+    // Check if exists (global types have organizationId = null)
+    const existing = await prisma.planItemType.findFirst({
+      where: { slug: type.slug, organizationId: null },
+    });
+
+    if (!existing) {
+      await prisma.planItemType.create({
+        data: type,
+      });
+      console.log(`Created plan item type: ${type.name} (Level ${type.level})`);
+    } else {
+      console.log(`Plan item type already exists: ${type.name}`);
+    }
+  }
+
   // Enable some feature flags for sample org
   const flagsToEnable = ['data_export', 'audit_logging', 'custom_roles'];
   const allFlags = await prisma.featureFlag.findMany();

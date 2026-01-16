@@ -16,6 +16,8 @@ import platformRoutes from './modules/platform/platform.routes.js';
 import invitationsRoutes from './modules/invitations/invitations.routes.js';
 import menusRoutes from './modules/menus/menus.routes.js';
 import projectsRoutes from './modules/projects/projects.routes.js';
+import planItemsRoutes from './modules/plan-items/plan-items.routes.js';
+import planItemTypesRoutes from './modules/plan-items/plan-item-types.routes.js';
 
 const app = express();
 
@@ -64,6 +66,8 @@ app.use('/api/platform', platformRoutes);
 app.use('/api/invitations', invitationsRoutes);
 app.use('/api/menus', menusRoutes);
 app.use('/api/projects', projectsRoutes);
+app.use('/api/plan-items', planItemsRoutes);
+app.use('/api/plan-item-types', planItemTypesRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
