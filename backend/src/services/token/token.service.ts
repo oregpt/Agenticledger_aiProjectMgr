@@ -1,4 +1,4 @@
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt, { JwtPayload, SignOptions, Secret } from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import config from '../../config/index.js';
 import prisma from '../../config/database.js';
@@ -28,9 +28,9 @@ export const generateAccessToken = (userId: string, email: string): string => {
     type: 'access',
   };
 
-  return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.accessExpiry,
-  });
+  return jwt.sign(payload, config.jwt.secret as Secret, {
+    expiresIn: config.jwt.accessExpiry as string,
+  } as SignOptions);
 };
 
 export const generateRefreshToken = async (
@@ -52,9 +52,9 @@ export const generateRefreshToken = async (
     type: 'refresh',
   };
 
-  const token = jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.refreshExpiry,
-  });
+  const token = jwt.sign(payload, config.jwt.secret as Secret, {
+    expiresIn: config.jwt.refreshExpiry as string,
+  } as SignOptions);
 
   // Store in database
   await prisma.refreshToken.create({

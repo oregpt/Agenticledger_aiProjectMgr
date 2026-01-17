@@ -181,7 +181,7 @@ export const updateOrganizationConfig = async (orgId: number, input: UpdateOrgCo
 
   const updated = await prisma.organization.update({
     where: { id: orgId },
-    data: { config: newConfig },
+    data: { config: newConfig as any },
   });
 
   return { config: updated.config };

@@ -17,12 +17,13 @@ export const updateProfile = async (
 };
 
 export const listUsers = async (
-  req: Request<{}, {}, {}, ListUsersQuery>,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const result = await usersService.listUsersInOrganization(req.organizationId!, req.query);
+    const query = req.query as unknown as ListUsersQuery;
+    const result = await usersService.listUsersInOrganization(req.organizationId!, query);
     paginatedResponse(res, result.users, result.page, result.limit, result.total);
   } catch (error) {
     next(error);

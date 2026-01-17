@@ -344,9 +344,9 @@ router.get(
   '/:orgId/roles',
   authenticate,
   requireOrgContext,
-  async (req, res, next) => {
+  async (req: any, res, next) => {
     // Set organizationId from route param for the roles controller (as number)
-    (req.query as any).organizationId = parseInt(req.params.orgId, 10);
+    req.query.organizationId = parseInt(req.params.orgId, 10);
     next();
   },
   rolesController.listRoles

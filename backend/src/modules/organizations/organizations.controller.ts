@@ -22,12 +22,13 @@ export const getMyOrganizations = async (
 };
 
 export const getAllOrganizations = async (
-  req: Request<{}, {}, {}, ListOrganizationsQuery>,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const result = await organizationsService.getAllOrganizations(req.query);
+    const query = req.query as unknown as ListOrganizationsQuery;
+    const result = await organizationsService.getAllOrganizations(query);
     paginatedResponse(res, result.organizations, result.page, result.limit, result.total);
   } catch (error) {
     next(error);

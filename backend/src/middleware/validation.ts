@@ -38,10 +38,10 @@ export const validate = (schema: ZodSchema, type: ValidationType = 'body') => {
           req.body = result.data;
           break;
         case 'query':
-          req.query = result.data;
+          (req as any).query = result.data;
           break;
         case 'params':
-          req.params = result.data;
+          (req as any).params = result.data;
           break;
       }
 
