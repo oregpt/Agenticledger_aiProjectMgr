@@ -168,6 +168,14 @@ export interface LoginInput {
   password: string;
 }
 
+export interface RegisterResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: User;
+  message: string;
+}
+
 // Project types
 export interface Project {
   id: string;

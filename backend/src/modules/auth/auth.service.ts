@@ -140,21 +140,25 @@ export const register = async (
       return newUser;
     });
 
+    // Generate tokens to auto-login the user
+    const tokens = await generateTokenPair(user.id, user.uuid, user.email, userAgent, ipAddress);
+
+    // Update last login
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    // Get user with organizations
+    const authUser = await formatAuthUser(user.id);
+
     // Send welcome email
     await emailService.sendWelcome(user.email, user.firstName);
 
     return {
-      user: {
-        id: user.id,
-        uuid: user.uuid,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        avatarUrl: user.avatarUrl,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt,
-      },
-      message: 'Registration successful. You can now log in.',
+      ...tokens,
+      user: authUser,
+      message: 'Registration successful. Welcome to the organization!',
     };
   }
 
@@ -187,7 +191,7 @@ export const register = async (
     throw new AppError(ErrorCodes.INTERNAL_ERROR, 'System roles not configured', 500);
   }
 
-  // Create user, organization, and membership in transaction
+  // Create user, organization, membership, and default project in transaction
   const user = await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
@@ -216,6 +220,17 @@ export const register = async (
       },
     });
 
+    // Create default "First Project" for the new organization
+    await tx.project.create({
+      data: {
+        name: 'First Project',
+        description: 'Your first project - feel free to rename or modify it!',
+        organizationId: newOrg.id,
+        startDate: new Date(),
+        status: 'active',
+      },
+    });
+
     // Enable default feature flags for new org
     const defaultFlags = await tx.featureFlag.findMany({
       where: { defaultEnabled: true },
@@ -235,21 +250,25 @@ export const register = async (
     return newUser;
   });
 
+  // Generate tokens to auto-login the user
+  const tokens = await generateTokenPair(user.id, user.uuid, user.email, userAgent, ipAddress);
+
+  // Update last login
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date() },
+  });
+
+  // Get user with organizations
+  const authUser = await formatAuthUser(user.id);
+
   // Send verification email
   const verificationUrl = `${config.frontendUrl}/verify-email?token=${verificationToken}`;
   await emailService.sendWelcome(user.email, user.firstName, verificationUrl);
 
   return {
-    user: {
-      id: user.id,
-      uuid: user.uuid,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      avatarUrl: user.avatarUrl,
-      emailVerified: user.emailVerified,
-      createdAt: user.createdAt,
-    },
+    ...tokens,
+    user: authUser,
     message: 'Registration successful. Please check your email to verify your account.',
   };
 };

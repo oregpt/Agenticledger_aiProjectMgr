@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import authApi from '@/api/auth.api';
+import { useAuthStore } from '@/stores/authStore';
 
 export function RegisterForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const invitationToken = searchParams.get('invitation');
+  const { setTokens, setUser } = useAuthStore();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -57,23 +59,29 @@ export function RegisterForm() {
         invitationToken: invitationToken || undefined,
       });
 
-      if (response.success) {
-        setSuccess('Registration successful! Please check your email to verify your account.');
-        setTimeout(() => navigate('/login'), 3000);
+      if (response.success && response.data) {
+        // Auto-login: store tokens and user data
+        const { accessToken, refreshToken, user } = response.data;
+        setTokens(accessToken, refreshToken);
+        setUser(user);
+
+        // Navigate to dashboard
+        setSuccess('Registration successful! Redirecting...');
+        setTimeout(() => navigate('/'), 1000);
       } else {
         // Extract detailed validation errors if available
-        const details = response.error?.details;
-        if (details && Array.isArray(details) && details.length > 0) {
-          const messages = details.map((d: { field: string; message: string }) => `${d.field}: ${d.message}`).join('\n');
+        const details = response.error?.details as Array<{ field: string; message: string }> | undefined;
+        if (details && details.length > 0) {
+          const messages = details.map((d) => `${d.field}: ${d.message}`).join('\n');
           setError(messages);
         } else {
           setError(response.error?.message || 'Registration failed');
         }
       }
     } catch (err: any) {
-      const details = err.response?.data?.error?.details;
-      if (details && Array.isArray(details) && details.length > 0) {
-        const messages = details.map((d: { field: string; message: string }) => `${d.field}: ${d.message}`).join('\n');
+      const details = err.response?.data?.error?.details as Array<{ field: string; message: string }> | undefined;
+      if (details && details.length > 0) {
+        const messages = details.map((d) => `${d.field}: ${d.message}`).join('\n');
         setError(messages);
       } else {
         setError(err.response?.data?.error?.message || 'An error occurred');
@@ -143,16 +151,17 @@ export function RegisterForm() {
 
           {!invitationToken && (
             <div className="space-y-2">
-              <Label htmlFor="organizationName">Organization name (optional)</Label>
+              <Label htmlFor="organizationName">Organization name</Label>
               <Input
                 id="organizationName"
                 name="organizationName"
                 placeholder="My Company"
                 value={formData.organizationName}
                 onChange={handleChange}
+                required
               />
               <p className="text-xs text-muted-foreground">
-                Leave blank to create a personal workspace
+                Your workspace name (you can change it later)
               </p>
             </div>
           )}

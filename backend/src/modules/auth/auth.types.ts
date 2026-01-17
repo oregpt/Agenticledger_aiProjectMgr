@@ -31,7 +31,10 @@ export interface LoginResponse {
 }
 
 export interface RegisterResponse {
-  user: Omit<AuthUser, 'organizations'>;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: AuthUser;
   message: string;
 }
 
