@@ -367,3 +367,48 @@ Multi-tenant AI-powered project management and status reporting tool.
   - View Source dialog with filtered content IDs shows only relevant sources
   - Markdown export with blob download works well for simple exports
 ---
+
+## 2026-01-17 - US-010
+- Implemented Plan Updater (Agent 0) for AI-powered plan update suggestions
+- Created plan-updater backend module:
+  - plan-updater.schema.ts - Zod schemas for suggestions and updates
+  - plan-updater.service.ts - AI suggestion generation service
+  - plan-updater.controller.ts - HTTP handlers
+- Created plan-updater prompts:
+  - PlanSuggestion type with field (status/notes/targetEndDate/actualEndDate)
+  - Includes currentValue, suggestedValue, reason, confidence, evidence links
+  - PlanSuggestionsResult wraps suggestions with summary
+- Implemented endpoints under /api/projects/:projectId/:
+  - POST /plan-suggestions - Get AI suggestions based on activity period
+  - POST /plan-updates - Apply selected updates with history records
+- Plan Updater leverages Activity Reporter:
+  - Calls generateReport() to get activity analysis for period
+  - Uses report data to inform plan update suggestions
+  - Links evidence from activity sources to suggestions
+- Frontend PlanUpdater.tsx component:
+  - Date range selection with start/end pickers
+  - Get Suggestions button with loading state
+  - Suggestion cards with checkbox selection
+  - Shows confidence badges (high/medium/low)
+  - Shows evidence summary and affected plan items
+  - Apply Selected Updates button for bulk operations
+  - Success toast with count of applied changes
+- Added Plan Updater tab to PlanPage (alongside Plan View and Import CSV)
+- Added Progress component from shadcn/ui (radix-ui/react-progress)
+- **Files changed:**
+  - backend/src/modules/plan-updater/* (new - 3 files)
+  - backend/src/services/ai/prompts/plan-updater.ts (new)
+  - backend/src/modules/projects/projects.routes.ts (added plan-updater routes)
+  - frontend/src/components/plan/PlanUpdater.tsx (new)
+  - frontend/src/api/plan-updater.api.ts (new)
+  - frontend/src/api/projects.api.ts (added suggestion/update functions)
+  - frontend/src/pages/plan/PlanPage.tsx (added Plan Updater tab)
+  - frontend/src/components/ui/progress.tsx (new)
+- **Learnings:**
+  - Reusing activity reporter for data reduces duplication and maintains consistency
+  - generateJsonCompletion takes array of ChatCompletionMessageParam, not separate prompts
+  - successResponse(res, data) is the correct pattern, not res.json(successResponse(data))
+  - Checkbox-based selection pattern from IntakePage works well for bulk operations
+  - Confidence badges help users prioritize which suggestions to apply
+  - PlanItemHistory records provide audit trail for AI-suggested changes
+---

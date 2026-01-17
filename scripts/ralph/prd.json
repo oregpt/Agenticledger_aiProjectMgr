@@ -236,8 +236,8 @@
         "Link references[] to source ContentItems"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Plan Updater implemented with AI suggestions based on activity reports. Endpoint at POST /api/projects/:id/plan-suggestions generates suggestions, POST /api/projects/:id/plan-updates applies them. Suggestions include confidence levels and evidence links."
     },
     {
       "id": "US-011",
