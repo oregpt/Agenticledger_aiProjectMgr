@@ -190,8 +190,8 @@ export async function runD1Tests(): Promise<ReturnType<TestRunner['summary']>> {
   // ==================== Logout Tests ====================
 
   await runner.test('POST /api/auth/logout - Logout user', async () => {
-    // Create a separate user session to logout
-    const sessionUser = await login(TEST_USER);
+    // Create a separate user session to logout (force refresh to get new tokens)
+    const sessionUser = await login(TEST_USER, true);
     const response = await post('/auth/logout', sessionUser, {
       refreshToken: sessionUser.refreshToken,
     });

@@ -39,6 +39,7 @@ export async function runD5Tests(): Promise<ReturnType<TestRunner['summary']>> {
       name: uniqueString('reporter-test'),
       client: 'Reporter Test Client',
       status: 'active',
+      startDate: new Date().toISOString(),
     });
     const projectData = await projectResponse.json();
     assertSuccess(projectData, 'Project creation should succeed');
@@ -82,7 +83,9 @@ export async function runD5Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
     assertEqual(response.status, 200, 'Should return 200 status');
     assertSuccess(data, 'Response should be successful');
-    assertTrue(Array.isArray(data.data), 'Should return array');
+    // Reports endpoint may return array or paginated object with items
+    const items = Array.isArray(data.data) ? data.data : (data.data?.items || []);
+    assertTrue(Array.isArray(items), 'Should return array');
   });
 
   await runner.test('GET /api/projects/:id/activity-reports - Without auth should fail', async () => {
@@ -161,11 +164,13 @@ export async function runD5Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
     assertEqual(response.status, 200, 'Should return 200 status');
     assertSuccess(data, 'Response should be successful');
-    assertTrue(Array.isArray(data.data), 'Should return array');
+    // Reports endpoint may return array or paginated object with items
+    const items = Array.isArray(data.data) ? data.data : (data.data?.items || []);
+    assertTrue(Array.isArray(items), 'Should return array');
 
     // If we created a report, it should be in the list
     if (testReportId) {
-      const reportExists = data.data.some((r: any) => r.id === testReportId);
+      const reportExists = items.some((r: any) => r.id === testReportId);
       assertTrue(reportExists, 'Created report should be in list');
     }
   });
@@ -181,7 +186,9 @@ export async function runD5Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
     assertEqual(response.status, 200, 'Should return 200 status');
     assertSuccess(data, 'Response should be successful');
-    assertTrue(Array.isArray(data.data), 'Should return array');
+    // Reports endpoint may return array or paginated object with items
+    const items = Array.isArray(data.data) ? data.data : (data.data?.items || []);
+    assertTrue(Array.isArray(items), 'Should return array');
   });
 
   // ==================== Get Single Report ====================

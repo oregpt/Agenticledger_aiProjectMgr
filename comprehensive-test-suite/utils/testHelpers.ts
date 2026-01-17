@@ -34,10 +34,23 @@ export const TEST_USER: TestUser = {
   password: 'orgadmin123',
 };
 
+// Cache for authenticated users to avoid repeated logins (rate limiting protection)
+const authCache = new Map<string, TestUser>();
+
 /**
- * Login and get tokens for a test user
+ * Login and get tokens for a test user (uses cache to avoid rate limiting)
  */
-export async function login(user: TestUser): Promise<TestUser> {
+export async function login(user: TestUser, forceRefresh = false): Promise<TestUser> {
+  const cacheKey = user.email;
+
+  // Return cached user if available and not forcing refresh
+  if (!forceRefresh && authCache.has(cacheKey)) {
+    const cached = authCache.get(cacheKey)!;
+    if (cached.accessToken) {
+      return cached;
+    }
+  }
+
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -50,13 +63,32 @@ export async function login(user: TestUser): Promise<TestUser> {
   }
 
   const data = await response.json();
-  return {
+  const authenticatedUser: TestUser = {
     ...user,
     accessToken: data.data.accessToken,
     refreshToken: data.data.refreshToken,
-    organizationId: data.data.organizations?.[0]?.id,
+    organizationId: data.data.user?.organizations?.[0]?.id,
     userId: data.data.user?.id,
   };
+
+  // Cache the authenticated user
+  authCache.set(cacheKey, authenticatedUser);
+
+  return authenticatedUser;
+}
+
+/**
+ * Clear the auth cache (useful for logout tests)
+ */
+export function clearAuthCache(): void {
+  authCache.clear();
+}
+
+/**
+ * Get cached user if available (doesn't make a request)
+ */
+export function getCachedUser(email: string): TestUser | undefined {
+  return authCache.get(email);
 }
 
 /**

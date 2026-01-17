@@ -63,7 +63,18 @@ async function main() {
   let totalPassed = 0;
   let totalFailed = 0;
 
-  for (const domain of domainsToRun) {
+  // Helper to wait between test suites to avoid rate limiting
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  for (let i = 0; i < domainsToRun.length; i++) {
+    const domain = domainsToRun[i];
+
+    // Add delay between domains to avoid rate limiting (except for first domain)
+    if (i > 0) {
+      console.log('\n  [Waiting 2s to avoid rate limiting...]\n');
+      await wait(2000);
+    }
+
     try {
       const result = await domain.runner();
       allResults.push(result);

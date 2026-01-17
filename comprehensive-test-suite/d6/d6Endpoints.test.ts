@@ -26,68 +26,81 @@ export async function runD6Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
   let adminUser: TestUser = TEST_ADMIN;
 
-  // Sample report data for formatting tests
+  // Sample report data for formatting tests (matches FormatMarkdownInputSchema)
   const sampleReportData = {
-    source_type: 'activity_report',
+    sourceType: 'activity_report',
     projectName: 'Test Project',
-    periodStart: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    periodEnd: new Date().toISOString(),
     data: {
-      summary: 'Weekly summary: Project is on track with 80% completion.',
-      status_updates: [
-        {
-          item: 'Backend Development',
-          status: 'completed',
-          description: 'All API endpoints are deployed and tested.',
-          confidence: 0.95,
-        },
-        {
-          item: 'Frontend Dashboard',
-          status: 'in_progress',
-          description: 'Dashboard UI is 60% complete.',
-          confidence: 0.85,
-        },
-      ],
-      action_items: [
-        {
-          title: 'Complete security audit',
-          owner: 'John Smith',
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          priority: 'high',
-          status: 'pending',
-        },
-        {
-          title: 'Update documentation',
-          owner: 'Jane Doe',
-          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          priority: 'medium',
-          status: 'in_progress',
-        },
-      ],
-      risks: [
-        {
-          title: 'Resource availability',
-          severity: 'medium',
-          description: 'Holiday season may impact team availability.',
-          mitigation: 'Front-load critical tasks before December.',
-        },
-      ],
-      decisions: [
-        {
-          title: 'Technology stack approved',
-          description: 'Team decided to use React with TypeScript.',
-          date: new Date().toISOString(),
-          decisionMakers: ['Tech Lead', 'Product Manager'],
-        },
-      ],
-      blockers: [
-        {
-          title: 'Third-party API delay',
-          description: 'Waiting for vendor to provide API access.',
-          status: 'unresolved',
-          owner: 'Project Manager',
-        },
-      ],
+      title: 'Weekly Status Report',
+      periodStart: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      periodEnd: new Date().toISOString(),
+      reportData: {
+        summary: 'Weekly summary: Project is on track with 80% completion.',
+        statusUpdates: [
+          {
+            planItemId: null,
+            planItemName: 'Backend Development',
+            update: 'All API endpoints are deployed and tested.',
+            status: 'completed',
+            confidence: 'high',
+            sourceContentIds: [],
+          },
+          {
+            planItemId: null,
+            planItemName: 'Frontend Dashboard',
+            update: 'Dashboard UI is 60% complete.',
+            status: 'in_progress',
+            confidence: 'medium',
+            sourceContentIds: [],
+          },
+        ],
+        actionItems: [
+          {
+            title: 'Complete security audit',
+            description: 'Perform full security review',
+            owner: 'John Smith',
+            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            priority: 'high',
+            status: 'pending',
+            planItemId: null,
+            confidence: 'high',
+            sourceContentIds: [],
+          },
+        ],
+        risks: [
+          {
+            title: 'Resource availability',
+            description: 'Holiday season may impact team availability.',
+            severity: 'medium',
+            mitigation: 'Front-load critical tasks before December.',
+            planItemId: null,
+            confidence: 'medium',
+            sourceContentIds: [],
+          },
+        ],
+        decisions: [
+          {
+            title: 'Technology stack approved',
+            description: 'Team decided to use React with TypeScript.',
+            decisionMaker: 'Tech Lead',
+            decisionDate: new Date().toISOString(),
+            planItemId: null,
+            confidence: 'high',
+            sourceContentIds: [],
+          },
+        ],
+        blockers: [
+          {
+            title: 'Third-party API delay',
+            description: 'Waiting for vendor to provide API access.',
+            resolution: null,
+            planItemId: null,
+            confidence: 'high',
+            sourceContentIds: [],
+          },
+        ],
+        suggestedPlanUpdates: [],
+      },
     },
   };
 
@@ -120,36 +133,46 @@ export async function runD6Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
   await runner.test('POST /api/format/markdown - Format plan as Markdown', async () => {
     const planData = {
-      source_type: 'plan',
+      sourceType: 'plan',
       projectName: 'Test Project',
       data: {
-        items: [
+        planItems: [
           {
+            id: '00000000-0000-0000-0000-000000000001',
             name: 'Phase 1 - Planning',
-            type: 'workstream',
+            itemType: 'workstream',
             status: 'completed',
+            owner: null,
             children: [
               {
+                id: '00000000-0000-0000-0000-000000000002',
                 name: 'Requirements gathering',
-                type: 'milestone',
+                itemType: 'milestone',
                 status: 'completed',
+                owner: null,
               },
               {
+                id: '00000000-0000-0000-0000-000000000003',
                 name: 'Design review',
-                type: 'milestone',
+                itemType: 'milestone',
                 status: 'completed',
+                owner: null,
               },
             ],
           },
           {
+            id: '00000000-0000-0000-0000-000000000004',
             name: 'Phase 2 - Development',
-            type: 'workstream',
+            itemType: 'workstream',
             status: 'in_progress',
+            owner: null,
             children: [
               {
+                id: '00000000-0000-0000-0000-000000000005',
                 name: 'Backend API',
-                type: 'milestone',
+                itemType: 'milestone',
                 status: 'in_progress',
+                owner: null,
               },
             ],
           },
@@ -167,22 +190,35 @@ export async function runD6Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
   await runner.test('POST /api/format/markdown - Empty data should handle gracefully', async () => {
     const emptyData = {
-      source_type: 'activity_report',
+      sourceType: 'activity_report',
       projectName: 'Empty Project',
-      data: {},
+      data: {
+        title: 'Empty Report',
+        periodStart: new Date().toISOString(),
+        periodEnd: new Date().toISOString(),
+        reportData: {
+          summary: '',
+          statusUpdates: [],
+          actionItems: [],
+          risks: [],
+          decisions: [],
+          blockers: [],
+          suggestedPlanUpdates: [],
+        },
+      },
     };
 
     const response = await post('/format/markdown', adminUser, emptyData);
     const data = await response.json();
 
-    // Should either succeed with minimal content or return validation error
+    // Should succeed with minimal content
     assertTrue(
       response.status === 200 || response.status >= 400,
       'Should handle empty data'
     );
   });
 
-  await runner.test('POST /api/format/markdown - Missing source_type should fail', async () => {
+  await runner.test('POST /api/format/markdown - Missing sourceType should fail', async () => {
     const response = await post('/format/markdown', adminUser, {
       projectName: 'Test',
       data: {},
@@ -232,10 +268,10 @@ export async function runD6Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
   await runner.test('POST /api/format/pptx - Missing data should fail', async () => {
     const response = await apiRequest('POST', '/format/pptx', adminUser, {
-      source_type: 'activity_report',
+      sourceType: 'activity_report',
     });
 
-    // Should either fail validation or handle gracefully
+    // Should fail validation since data is required
     assertTrue(
       response.status === 200 || response.status >= 400,
       'Should handle missing data'
@@ -249,15 +285,20 @@ export async function runD6Tests(): Promise<ReturnType<TestRunner['summary']>> {
       ...sampleReportData,
       data: {
         ...sampleReportData.data,
-        summary: 'A'.repeat(5000), // Very long summary
-        status_updates: Array(50)
-          .fill(null)
-          .map((_, i) => ({
-            item: `Item ${i + 1}`,
-            status: i % 3 === 0 ? 'completed' : 'in_progress',
-            description: `Description for item ${i + 1}`,
-            confidence: 0.8,
-          })),
+        reportData: {
+          ...sampleReportData.data.reportData,
+          summary: 'A'.repeat(5000), // Very long summary
+          statusUpdates: Array(50)
+            .fill(null)
+            .map((_, i) => ({
+              planItemId: null,
+              planItemName: `Item ${i + 1}`,
+              update: `Description for item ${i + 1}`,
+              status: i % 3 === 0 ? 'completed' : 'in_progress',
+              confidence: 'high' as const,
+              sourceContentIds: [],
+            })),
+        },
       },
     };
 
@@ -274,7 +315,10 @@ export async function runD6Tests(): Promise<ReturnType<TestRunner['summary']>> {
       projectName: 'Test <Project> & "Special" Characters',
       data: {
         ...sampleReportData.data,
-        summary: 'Summary with **markdown** and `code` and <html>',
+        reportData: {
+          ...sampleReportData.data.reportData,
+          summary: 'Summary with **markdown** and `code` and <html>',
+        },
       },
     };
 

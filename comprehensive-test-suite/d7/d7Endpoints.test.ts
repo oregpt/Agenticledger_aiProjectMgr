@@ -43,16 +43,17 @@ export async function runD7Tests(): Promise<ReturnType<TestRunner['summary']>> {
   // ==================== Plan Item Types ====================
 
   await runner.test('GET /api/config/plan-item-types - List all plan item types', async () => {
-    const response = await get('/config/plan-item-types', adminUser);
+    const response = await get('/config/plan-item-types?includeSystem=true', adminUser);
     const data = await response.json();
 
     assertEqual(response.status, 200, 'Should return 200 status');
     assertSuccess(data, 'Response should be successful');
-    assertTrue(Array.isArray(data.data), 'Should return array');
-    assertArrayMinLength(data.data, 5, 'Should have default system types');
+    // Response is { items: [], pagination: {} }
+    assertTrue(Array.isArray(data.data.items), 'Should return items array');
+    assertArrayMinLength(data.data.items, 5, 'Should have default system types');
 
     // Verify system types exist
-    const systemTypes = data.data.filter((t: any) => t.isSystem);
+    const systemTypes = data.data.items.filter((t: any) => t.isSystem);
     assertArrayMinLength(systemTypes, 5, 'Should have 5 system types');
   });
 
@@ -69,7 +70,8 @@ export async function runD7Tests(): Promise<ReturnType<TestRunner['summary']>> {
     const response = await post('/config/plan-item-types', adminUser, typeData);
     const data = await response.json();
 
-    assertEqual(response.status, 200, 'Should return 200 status');
+    // 201 Created is the correct REST response for POST
+    assertTrue(response.status === 200 || response.status === 201, 'Should return 200 or 201 status');
     assertSuccess(data, 'Create should succeed');
     assertHasProperty(data.data, 'id', 'Should return type ID');
     assertEqual(data.data.isSystem, false, 'Custom type should not be system');
@@ -126,9 +128,9 @@ export async function runD7Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
   await runner.test('PUT /api/config/plan-item-types/:id - Update system type should fail', async () => {
     // Get a system type
-    const listResponse = await get('/config/plan-item-types', adminUser);
+    const listResponse = await get('/config/plan-item-types?includeSystem=true', adminUser);
     const listData = await listResponse.json();
-    const systemType = listData.data.find((t: any) => t.isSystem);
+    const systemType = listData.data.items.find((t: any) => t.isSystem);
 
     if (!systemType) {
       assertTrue(true, 'No system type found to test');
@@ -158,9 +160,9 @@ export async function runD7Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
   await runner.test('DELETE /api/config/plan-item-types/:id - Delete system type should fail', async () => {
     // Get a system type
-    const listResponse = await get('/config/plan-item-types', adminUser);
+    const listResponse = await get('/config/plan-item-types?includeSystem=true', adminUser);
     const listData = await listResponse.json();
-    const systemType = listData.data.find((t: any) => t.isSystem);
+    const systemType = listData.data.items.find((t: any) => t.isSystem);
 
     if (!systemType) {
       assertTrue(true, 'No system type found to test');
@@ -177,13 +179,14 @@ export async function runD7Tests(): Promise<ReturnType<TestRunner['summary']>> {
   // ==================== Content Types ====================
 
   await runner.test('GET /api/config/content-types - List all content types', async () => {
-    const response = await get('/config/content-types', adminUser);
+    const response = await get('/config/content-types?includeSystem=true', adminUser);
     const data = await response.json();
 
     assertEqual(response.status, 200, 'Should return 200 status');
     assertSuccess(data, 'Response should be successful');
-    assertTrue(Array.isArray(data.data), 'Should return array');
-    assertArrayMinLength(data.data, 5, 'Should have default system types');
+    // Response is { items: [], pagination: {} }
+    assertTrue(Array.isArray(data.data.items), 'Should return items array');
+    assertArrayMinLength(data.data.items, 5, 'Should have default system types');
   });
 
   await runner.test('POST /api/config/content-types - Create custom type', async () => {
@@ -198,7 +201,8 @@ export async function runD7Tests(): Promise<ReturnType<TestRunner['summary']>> {
     const response = await post('/config/content-types', adminUser, typeData);
     const data = await response.json();
 
-    assertEqual(response.status, 200, 'Should return 200 status');
+    // 201 Created is the correct REST response for POST
+    assertTrue(response.status === 200 || response.status === 201, 'Should return 200 or 201 status');
     assertSuccess(data, 'Create should succeed');
     assertHasProperty(data.data, 'id', 'Should return type ID');
 
@@ -243,13 +247,14 @@ export async function runD7Tests(): Promise<ReturnType<TestRunner['summary']>> {
   // ==================== Activity Types ====================
 
   await runner.test('GET /api/config/activity-types - List all activity types', async () => {
-    const response = await get('/config/activity-types', adminUser);
+    const response = await get('/config/activity-types?includeSystem=true', adminUser);
     const data = await response.json();
 
     assertEqual(response.status, 200, 'Should return 200 status');
     assertSuccess(data, 'Response should be successful');
-    assertTrue(Array.isArray(data.data), 'Should return array');
-    assertArrayMinLength(data.data, 5, 'Should have default system types');
+    // Response is { items: [], pagination: {} }
+    assertTrue(Array.isArray(data.data.items), 'Should return items array');
+    assertArrayMinLength(data.data.items, 5, 'Should have default system types');
   });
 
   await runner.test('POST /api/config/activity-types - Create custom type', async () => {
@@ -264,7 +269,8 @@ export async function runD7Tests(): Promise<ReturnType<TestRunner['summary']>> {
     const response = await post('/config/activity-types', adminUser, typeData);
     const data = await response.json();
 
-    assertEqual(response.status, 200, 'Should return 200 status');
+    // 201 Created is the correct REST response for POST
+    assertTrue(response.status === 200 || response.status === 201, 'Should return 200 or 201 status');
     assertSuccess(data, 'Create should succeed');
     assertHasProperty(data.data, 'id', 'Should return type ID');
 
