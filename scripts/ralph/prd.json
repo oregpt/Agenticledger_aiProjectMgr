@@ -123,8 +123,8 @@
         "Run migration and verify"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented with type lookup endpoints at /api/projects/lookup/content-types and /api/projects/lookup/activity-item-types"
     },
     {
       "id": "US-006",
