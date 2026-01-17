@@ -106,6 +106,99 @@ export interface ListContentItemsResponse {
   };
 }
 
+// AI Analysis types
+export interface AnalyzeContentInput {
+  projectId: string;
+  content: string;
+  title?: string;
+  dateOccurred?: string;
+  selectedContentTypeIds?: number[];
+  selectedActivityTypeIds?: number[];
+  selectedPlanItemIds?: string[];
+}
+
+export interface AnalysisSuggestion {
+  id: number | string;
+  confidence: 'high' | 'medium' | 'low';
+  reason: string;
+}
+
+export interface ExtractedItem {
+  type: string;
+  title: string;
+  description: string;
+  confidence: 'high' | 'medium' | 'low';
+  owner?: string;
+  dueDate?: string;
+  status?: string;
+  relatedPlanItemIds?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface AnalysisResult {
+  summary: string;
+  suggestedTitle?: string;
+  suggestedContentTypes: Array<{ id: number; confidence: 'high' | 'medium' | 'low'; reason: string }>;
+  suggestedActivityTypes: Array<{ id: number; confidence: 'high' | 'medium' | 'low'; reason: string }>;
+  suggestedPlanItems: Array<{ id: string; confidence: 'high' | 'medium' | 'low'; reason: string }>;
+  extractedItems: ExtractedItem[];
+  tags: string[];
+}
+
+export interface PlanItemContext {
+  id: string;
+  name: string;
+  fullPath: string;
+  description?: string;
+}
+
+export interface AnalyzeContentResponse {
+  analysis: AnalysisResult;
+  context: {
+    projectName: string;
+    contentTypes: Array<{ id: number; name: string; slug: string; description?: string }>;
+    activityTypes: Array<{ id: number; name: string; slug: string; description?: string }>;
+    planItems: PlanItemContext[];
+  };
+}
+
+export interface SaveAnalyzedContentInput {
+  projectId: string;
+  title: string;
+  dateOccurred: string;
+  rawContent: string;
+  sourceType: string;
+  contentTypeIds: number[];
+  activityTypeIds: number[];
+  planItemIds: string[];
+  tags: string[];
+  aiSummary?: string;
+  aiExtractedEntities?: Record<string, unknown>;
+  extractedItems?: Array<{
+    type: string;
+    title: string;
+    description: string;
+    owner?: string;
+    dueDate?: string;
+    status?: string;
+    relatedPlanItemIds?: string[];
+    metadata?: Record<string, unknown>;
+  }>;
+}
+
+export interface SaveAnalyzedContentResponse {
+  mainItem: {
+    id: string;
+    title: string;
+  };
+  extractedItems: Array<{
+    id: string;
+    title: string;
+    type: string;
+  }>;
+  chunksCreated: number;
+}
+
 export const contentItemsApi = {
   // Get all content types
   getContentTypes: async (): Promise<ApiResponse<ContentType[]>> => {
@@ -155,6 +248,18 @@ export const contentItemsApi = {
   // Delete a content item
   delete: async (id: string): Promise<ApiResponse<{ message: string }>> => {
     const response = await apiClient.delete(`/content-items/${id}`);
+    return response.data;
+  },
+
+  // Analyze content with AI
+  analyze: async (input: AnalyzeContentInput): Promise<ApiResponse<AnalyzeContentResponse>> => {
+    const response = await apiClient.post('/content-items/analyze', input);
+    return response.data;
+  },
+
+  // Save analyzed content with AI suggestions
+  saveAnalyzed: async (input: SaveAnalyzedContentInput): Promise<ApiResponse<SaveAnalyzedContentResponse>> => {
+    const response = await apiClient.post('/content-items/save-analyzed', input);
     return response.data;
   },
 };

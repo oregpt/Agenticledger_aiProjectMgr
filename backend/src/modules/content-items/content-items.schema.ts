@@ -50,6 +50,44 @@ export const listContentItemsQuerySchema = z.object({
   search: z.string().optional(),
 });
 
+// Schema for analyzing content with AI
+export const analyzeContentSchema = z.object({
+  projectId: z.string().uuid(),
+  content: z.string().min(1),
+  title: z.string().optional(),
+  dateOccurred: z.coerce.date().optional(),
+  selectedContentTypeIds: z.array(z.coerce.number().int().positive()).optional(),
+  selectedActivityTypeIds: z.array(z.coerce.number().int().positive()).optional(),
+  selectedPlanItemIds: z.array(z.string().uuid()).optional(),
+});
+
+// Schema for saving analyzed content
+export const saveAnalyzedContentSchema = z.object({
+  projectId: z.string().uuid(),
+  title: z.string().min(1).max(500),
+  dateOccurred: z.coerce.date(),
+  rawContent: z.string(),
+  sourceType: z.enum([...sourceTypes, 'ai_extracted']),
+  contentTypeIds: z.array(z.coerce.number().int().positive()).default([]),
+  activityTypeIds: z.array(z.coerce.number().int().positive()).default([]),
+  planItemIds: z.array(z.string().uuid()).default([]),
+  tags: z.array(z.string()).default([]),
+  aiSummary: z.string().optional(),
+  aiExtractedEntities: z.record(z.unknown()).optional(),
+  extractedItems: z.array(z.object({
+    type: z.string(),
+    title: z.string(),
+    description: z.string(),
+    owner: z.string().optional(),
+    dueDate: z.string().optional(),
+    status: z.string().optional(),
+    relatedPlanItemIds: z.array(z.string().uuid()).optional(),
+    metadata: z.record(z.unknown()).optional(),
+  })).optional(),
+});
+
 export type CreateContentItemInput = z.infer<typeof createContentItemSchema>;
 export type UpdateContentItemInput = z.infer<typeof updateContentItemSchema>;
 export type ListContentItemsQuery = z.infer<typeof listContentItemsQuerySchema>;
+export type AnalyzeContentInput = z.infer<typeof analyzeContentSchema>;
+export type SaveAnalyzedContentInput = z.infer<typeof saveAnalyzedContentSchema>;
