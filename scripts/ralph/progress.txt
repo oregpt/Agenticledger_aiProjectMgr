@@ -638,3 +638,42 @@ Multi-tenant AI-powered project management and status reporting tool.
   - Including key files per domain helps developers navigate codebase
   - Environment variable documentation is essential for onboarding
 ---
+
+## 2026-01-17 - REL-002
+- Updated comprehensive-test-suite to use simplified d1/ through d7/ folder structure
+- Created utils/testRunner.ts with SuiteResult-based test framework:
+  - TestRunner class with test() method and summary()
+  - Comprehensive assertion helpers: assertEqual, assertExists, assertSuccess, etc.
+  - Color-coded console output with timing
+- Updated utils/testHelpers.ts:
+  - Fixed API_BASE_URL to use port 5000 (was 3001)
+  - TestUser interface and login/request helpers
+  - TEST_ADMIN and TEST_USER credentials
+- Created d1/ through d7/ domain folders with:
+  - ENDPOINTS.md documenting tested endpoints for each domain
+  - {domain}Endpoints.test.ts with actual API tests
+- Test coverage by domain:
+  - D1: Auth & Multi-tenancy - 16 tests (login, refresh, me, orgs, users)
+  - D2: Project Management - 14 tests (CRUD, validation, soft delete)
+  - D3: Plan Management - 13 tests (plan items, hierarchy, history, bulk)
+  - D4: Content Management - 13 tests (content CRUD, AI analysis)
+  - D5: Activity Reporter - 9 tests (report generation, listing)
+  - D6: Output Formatter - 10 tests (markdown, pptx export)
+  - D7: Configuration - 22 tests (plan/content/activity types CRUD)
+- Updated runTests.ts master runner:
+  - Updated imports to use d1-d7 folder structure
+  - Uses SuiteResult interface from testRunner
+  - Shows failed tests with errors at end
+- **Files changed:**
+  - comprehensive-test-suite/utils/testRunner.ts (new assertions)
+  - comprehensive-test-suite/utils/testHelpers.ts (port fix)
+  - comprehensive-test-suite/d1/ through d7/ (new structure)
+  - comprehensive-test-suite/runTests.ts (updated imports)
+  - scripts/ralph/prd.json (updated REL-002 notes)
+- **Learnings:**
+  - SuiteResult with passed/failed counts provides better aggregation than TestResult[]
+  - Each test file exports runD{n}Tests() that returns SuiteResult
+  - Import .js extension needed for ESM compatibility with tsx
+  - Test helpers should check response.success && response.data before accessing
+  - AI-dependent tests (D4, D5) should gracefully handle missing OpenAI key
+---

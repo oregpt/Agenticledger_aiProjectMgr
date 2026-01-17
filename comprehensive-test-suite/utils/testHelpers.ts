@@ -3,7 +3,7 @@
  * Provides utilities for API testing including authentication, request helpers, and assertions
  */
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api';
 
 export interface TestResult {
   testName: string;
@@ -22,14 +22,16 @@ export interface TestUser {
 }
 
 // Default test credentials from seed
+// orgadmin@acme.local is an org admin in acme-corp organization
 export const TEST_ADMIN: TestUser = {
-  email: 'admin@example.com',
-  password: 'password123',
+  email: 'orgadmin@acme.local',
+  password: 'orgadmin123',
 };
 
+// Regular user - same as admin for now since seed only creates org admin
 export const TEST_USER: TestUser = {
-  email: 'user@example.com',
-  password: 'password123',
+  email: 'orgadmin@acme.local',
+  password: 'orgadmin123',
 };
 
 /**

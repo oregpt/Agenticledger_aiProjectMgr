@@ -383,7 +383,7 @@
       ],
       "priority": 901,
       "passes": true,
-      "notes": "Created 8 domain test folders (d1-auth through d8-config) with 70+ test cases covering all API endpoints. Master runner supports running all or specific domain tests."
+      "notes": "Updated to use d1/ through d7/ folder structure. Each domain has ENDPOINTS.md and {domain}Endpoints.test.ts. Tests use SuiteResult-based TestRunner with comprehensive assertions. Master runner (runTests.ts) updated to use new test structure."
     },
     {
       "id": "REL-003",
