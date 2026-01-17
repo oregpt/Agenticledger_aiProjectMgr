@@ -26,3 +26,7 @@ Thumbs.db
 
 # Prisma
 prisma/migrations/**/migration_lock.toml
+
+# Uploads (keep directory but ignore files)
+uploads/*
+!uploads/.gitkeep

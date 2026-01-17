@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { successResponse, paginatedResponse } from '../../utils/responses';
+import { successResponse, paginatedResponse, ErrorCodes } from '../../utils/responses';
+import { AppError } from '../../middleware/errorHandler';
 import * as contentItemsService from './content-items.service';
 import * as analyzeService from './analyze.service';
+import { processUploadedFile } from '../../services/file-processing/index.js';
 import type {
   CreateContentItemInput,
   UpdateContentItemInput,
@@ -182,6 +184,56 @@ export const saveAnalyzedContent: RequestHandler = async (
 
     const result = await analyzeService.saveAnalyzedContent(input, userId, organizationId);
     successResponse(res, result, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/content-items/upload - Upload a file and create content item
+export const uploadFile: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const organizationId = req.organizationId!;
+    const userId = req.user?.id;
+
+    // Check for uploaded file
+    if (!req.file) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'No file uploaded', 400);
+    }
+
+    // Parse form fields
+    const { projectId, title, dateOccurred, planItemIds, contentTypeIds, activityTypeIds, tags } = req.body;
+
+    if (!projectId) {
+      throw new AppError(ErrorCodes.VALIDATION_ERROR, 'projectId is required', 400);
+    }
+
+    // Process the uploaded file (extract text, save to disk)
+    const processedFile = await processUploadedFile(req.file.buffer, req.file.originalname);
+
+    // Create content item input
+    const input: CreateContentItemInput = {
+      projectId,
+      sourceType: 'file',
+      title: title || req.file.originalname,
+      dateOccurred: dateOccurred ? new Date(dateOccurred) : new Date(),
+      planItemIds: planItemIds ? JSON.parse(planItemIds) : [],
+      contentTypeIds: contentTypeIds ? JSON.parse(contentTypeIds) : [],
+      activityTypeIds: activityTypeIds ? JSON.parse(activityTypeIds) : [],
+      tags: tags ? JSON.parse(tags) : [],
+      rawContent: processedFile.rawContent,
+      fileReference: processedFile.fileReference,
+      fileName: processedFile.fileName,
+      fileSize: processedFile.fileSize,
+      mimeType: processedFile.mimeType,
+    };
+
+    // Create the content item
+    const item = await contentItemsService.createContentItem(organizationId, input, userId);
+    successResponse(res, item, 201);
   } catch (error) {
     next(error);
   }

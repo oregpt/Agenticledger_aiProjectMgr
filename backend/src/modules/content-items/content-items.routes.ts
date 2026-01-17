@@ -3,6 +3,7 @@ import * as contentItemsController from './content-items.controller';
 import { validateBody, validateQuery } from '../../middleware/validation';
 import { authenticate } from '../../middleware/auth';
 import { requireOrgContext } from '../../middleware/orgContext';
+import { uploadSingleFile } from '../../middleware/upload.js';
 import {
   createContentItemSchema,
   updateContentItemSchema,
@@ -36,6 +37,13 @@ router.post(
   '/save-analyzed',
   validateBody(saveAnalyzedContentSchema),
   contentItemsController.saveAnalyzedContent
+);
+
+// POST /api/content-items/upload - Upload a file and create content item (must be before /:id)
+router.post(
+  '/upload',
+  uploadSingleFile,
+  contentItemsController.uploadFile
 );
 
 // GET /api/content-items/:id - Get a single content item
