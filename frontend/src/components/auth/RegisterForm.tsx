@@ -61,10 +61,23 @@ export function RegisterForm() {
         setSuccess('Registration successful! Please check your email to verify your account.');
         setTimeout(() => navigate('/login'), 3000);
       } else {
-        setError(response.error?.message || 'Registration failed');
+        // Extract detailed validation errors if available
+        const details = response.error?.details;
+        if (details && Array.isArray(details) && details.length > 0) {
+          const messages = details.map((d: { field: string; message: string }) => `${d.field}: ${d.message}`).join('\n');
+          setError(messages);
+        } else {
+          setError(response.error?.message || 'Registration failed');
+        }
       }
     } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'An error occurred');
+      const details = err.response?.data?.error?.details;
+      if (details && Array.isArray(details) && details.length > 0) {
+        const messages = details.map((d: { field: string; message: string }) => `${d.field}: ${d.message}`).join('\n');
+        setError(messages);
+      } else {
+        setError(err.response?.data?.error?.message || 'An error occurred');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +96,7 @@ export function RegisterForm() {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive whitespace-pre-line">{error}</div>
           )}
           {success && (
             <div className="rounded-md bg-green-500/10 p-3 text-sm text-green-600">{success}</div>
@@ -155,7 +168,9 @@ export function RegisterForm() {
               required
               autoComplete="new-password"
             />
-            <p className="text-xs text-muted-foreground">At least 8 characters</p>
+            <p className="text-xs text-muted-foreground">
+              Min 8 chars, with uppercase, lowercase, number, and special character (!@#$%^&* etc.)
+            </p>
           </div>
 
           <div className="space-y-2">
