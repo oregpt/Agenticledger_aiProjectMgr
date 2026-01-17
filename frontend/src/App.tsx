@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Layouts
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { AgentLayout } from '@/components/layout/AgentLayout';
 
 // Auth Pages
 import { LoginPage } from '@/pages/auth/LoginPage';
@@ -15,7 +16,6 @@ import { AcceptInvitationPage } from '@/pages/auth/AcceptInvitationPage';
 import { DashboardPage } from '@/pages/sample/DashboardPage';
 import { ReportsPage } from '@/pages/sample/ReportsPage';
 import { DataExportPage } from '@/pages/sample/DataExportPage';
-import { SettingsPage } from '@/pages/sample/SettingsPage';
 import { AuditLogPage } from '@/pages/sample/AuditLogPage';
 
 // Plan Pages
@@ -26,6 +26,9 @@ import { IntakePage } from '@/pages/intake/IntakePage';
 
 // Reporter Pages
 import { ReporterPage } from '@/pages/reporter/ReporterPage';
+
+// Settings Page
+import { SettingsPage } from '@/pages/settings/SettingsPage';
 
 // Admin Pages
 import { OrganizationPage } from '@/pages/admin/OrganizationPage';
@@ -54,7 +57,29 @@ function App() {
         <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
       </Route>
 
-      {/* Protected App Routes */}
+      {/* Agent Routes (Main App) */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <AgentLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Navigate to="/plan" replace />} />
+
+        {/* Agent Pages */}
+        <Route path="/plan" element={<PlanPage />} />
+        <Route path="/intake" element={<IntakePage />} />
+        <Route path="/reporter" element={<ReporterPage />} />
+
+        {/* Admin Config (part of agent tabs) */}
+        <Route path="/admin/config" element={<ConfigPage />} />
+
+        {/* Settings Page */}
+        <Route path="/settings" element={<SettingsPage />} />
+      </Route>
+
+      {/* Legacy App Routes (Sidebar layout) */}
       <Route
         element={
           <ProtectedRoute>
@@ -62,28 +87,16 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-
-        {/* Plan Page */}
-        <Route path="/plan" element={<PlanPage />} />
-
-        {/* Intake Page */}
-        <Route path="/intake" element={<IntakePage />} />
-
-        {/* Reporter Page */}
-        <Route path="/reporter" element={<ReporterPage />} />
 
         {/* Sample Pages */}
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/data-export" element={<DataExportPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/audit-log" element={<AuditLogPage />} />
 
         {/* Admin Routes */}
         <Route path="/admin/organization" element={<OrganizationPage />} />
         <Route path="/admin/roles" element={<RolesPage />} />
-        <Route path="/admin/config" element={<ConfigPage />} />
 
         {/* Platform Admin Routes */}
         <Route path="/platform/settings" element={<PlatformSettingsPage />} />
