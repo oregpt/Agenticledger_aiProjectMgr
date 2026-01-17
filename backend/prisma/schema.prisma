@@ -691,4 +691,40 @@ model ContentItem {
   @@index([projectWeek])
   @@index([processingStatus])
   @@index([isActive])
+
+  // Relations to chunks
+  chunks          ContentChunk[]
+}
+
+// ============================================================================
+// CONTENT CHUNKS (For RAG - Vector Embeddings)
+// ============================================================================
+
+model ContentChunk {
+  id              String    @id @default(uuid())
+  contentItemId   String
+
+  // Chunk data
+  chunkIndex      Int       @default(0)  // Order within parent content
+  chunkText       String    @db.Text
+
+  // Token count for this chunk
+  tokenCount      Int       @default(0)
+
+  // Embedding vector - stored as string, converted to vector in raw queries
+  // Using Unsupported type as Prisma doesn't natively support pgvector
+  // Actual embedding stored via raw SQL
+  embeddingVector Unsupported("vector(1536)")?
+
+  // Metadata
+  metadata        Json      @default("{}")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  contentItem     ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@index([contentItemId])
+  @@index([chunkIndex])
 }

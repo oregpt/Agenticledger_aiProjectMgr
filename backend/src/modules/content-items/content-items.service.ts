@@ -1,12 +1,12 @@
-import prisma from '../../config/database.js';
-import { AppError } from '../../middleware/errorHandler.js';
-import { ErrorCodes } from '../../utils/responses.js';
+import prisma from '../../config/database';
+import { AppError } from '../../middleware/errorHandler';
+import { ErrorCodes } from '../../utils/responses';
 import { Prisma } from '@prisma/client';
 import type {
   CreateContentItemInput,
   UpdateContentItemInput,
   ListContentItemsQuery,
-} from './content-items.schema.js';
+} from './content-items.schema';
 
 // Calculate project week from project start date and content date
 function calculateProjectWeek(projectStartDate: Date, dateOccurred: Date): number {

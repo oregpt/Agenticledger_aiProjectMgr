@@ -1,11 +1,14 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { successResponse, paginatedResponse } from '../../utils/responses.js';
-import * as contentItemsService from './content-items.service.js';
+import { successResponse, paginatedResponse } from '../../utils/responses';
+import * as contentItemsService from './content-items.service';
+import * as analyzeService from './analyze.service';
 import type {
   CreateContentItemInput,
   UpdateContentItemInput,
   ListContentItemsQuery,
-} from './content-items.schema.js';
+  AnalyzeContentInput,
+  SaveAnalyzedContentInput,
+} from './content-items.schema';
 
 // GET /api/projects/:projectId/content - List content items for a project
 export const getProjectContent: RequestHandler = async (
@@ -144,6 +147,41 @@ export const getActivityItemTypes: RequestHandler = async (
     const organizationId = req.organizationId!;
     const types = await contentItemsService.getActivityItemTypes(organizationId);
     successResponse(res, types);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/content-items/analyze - Analyze content using AI
+export const analyzeContent: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const organizationId = req.organizationId!;
+    const input = req.body as AnalyzeContentInput;
+
+    const result = await analyzeService.analyzeContent(input, organizationId);
+    successResponse(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/content-items/save-analyzed - Save analyzed content with AI suggestions
+export const saveAnalyzedContent: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const organizationId = req.organizationId!;
+    const userId = req.user!.id;
+    const input = req.body as SaveAnalyzedContentInput;
+
+    const result = await analyzeService.saveAnalyzedContent(input, userId, organizationId);
+    successResponse(res, result, 201);
   } catch (error) {
     next(error);
   }

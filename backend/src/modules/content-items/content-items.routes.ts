@@ -1,13 +1,15 @@
 import { Router } from 'express';
-import * as contentItemsController from './content-items.controller.js';
-import { validateBody, validateQuery } from '../../middleware/validation.js';
-import { authenticate } from '../../middleware/auth.js';
-import { requireOrgContext } from '../../middleware/orgContext.js';
+import * as contentItemsController from './content-items.controller';
+import { validateBody, validateQuery } from '../../middleware/validation';
+import { authenticate } from '../../middleware/auth';
+import { requireOrgContext } from '../../middleware/orgContext';
 import {
   createContentItemSchema,
   updateContentItemSchema,
   listContentItemsQuerySchema,
-} from './content-items.schema.js';
+  analyzeContentSchema,
+  saveAnalyzedContentSchema,
+} from './content-items.schema';
 
 const router = Router();
 
@@ -20,6 +22,20 @@ router.get(
   '/',
   validateQuery(listContentItemsQuerySchema),
   contentItemsController.listContentItems
+);
+
+// POST /api/content-items/analyze - Analyze content using AI (must be before /:id)
+router.post(
+  '/analyze',
+  validateBody(analyzeContentSchema),
+  contentItemsController.analyzeContent
+);
+
+// POST /api/content-items/save-analyzed - Save analyzed content (must be before /:id)
+router.post(
+  '/save-analyzed',
+  validateBody(saveAnalyzedContentSchema),
+  contentItemsController.saveAnalyzedContent
 );
 
 // GET /api/content-items/:id - Get a single content item
