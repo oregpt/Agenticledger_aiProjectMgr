@@ -415,8 +415,8 @@
         "Document any UI issues found in RELEASE_CHECKLIST.md"
       ],
       "priority": 903,
-      "passes": false,
-      "notes": "SKIPPED: Claude browser extension not connected. Backend and frontend servers verified running (3001 and 5173). Browser UI testing requires Claude-in-Chrome extension to be installed and active."
+      "passes": true,
+      "notes": "Used Playwright MCP tools instead of Claude-in-Chrome. Backend runs on port 3001 (not 5000). Test credentials: orgadmin@acme.local / orgadmin123. Fixed PlanPage.tsx bug (status undefined). 9 screenshots captured. All 4 tabs tested: Plan Agent (tree, add item), Intake Agent (form, checkboxes), Activity Reporter (period selector), Admin (projects, types). Minor issues: session timeout, dialog buttons outside viewport."
     },
     {
       "id": "REL-005",

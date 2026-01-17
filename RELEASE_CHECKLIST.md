@@ -36,7 +36,7 @@
 | REL-001 | Create platform-overview.md | Passed | Full API documentation |
 | REL-002 | Create comprehensive test suite | Passed | 120 tests across 7 domains |
 | REL-003 | Run and verify test suite | Passed | 73% pass rate |
-| REL-004 | Browser UI testing | Skipped | Chrome extension not available |
+| REL-004 | Browser UI testing | Passed | Tested with Playwright MCP |
 | REL-005 | Create release checklist | Complete | This document |
 
 ---
@@ -97,11 +97,52 @@ npx tsx comprehensive-test-suite/runTests.ts d1
 
 ## Browser Test Results
 
-**Status:** Skipped
+**Status:** Passed
+**Method:** Playwright MCP Tools
+**Screenshots:** 9 captured in `.playwright-mcp/screenshots/`
 
-Browser UI testing requires Claude-in-Chrome extension. Servers verified running:
-- Backend: Port 3001
-- Frontend: Port 5173
+### Servers Verified
+- Backend: Port 3001 (via existing process)
+- Frontend: Port 5173 (Vite dev server)
+
+### Test Credentials
+- **Org Admin**: orgadmin@acme.local / orgadmin123
+- Note: Documented credentials (admin@example.com) do not exist in seed
+
+### Features Tested
+
+| Feature | Tab | Status | Notes |
+|---------|-----|--------|-------|
+| Login Flow | - | ✅ Pass | Works with correct credentials |
+| Main Layout | - | ✅ Pass | Header, tabs, project switcher |
+| Plan View Tree | Plan Agent | ✅ Pass | Displays hierarchy correctly |
+| Expand/Collapse | Plan Agent | ✅ Pass | Tree controls work |
+| Add Item Dialog | Plan Agent | ✅ Pass | Full form with type selector |
+| Project Info Card | Plan Agent | ✅ Pass | After bug fix (status undefined) |
+| Content Form | Intake Agent | ✅ Pass | All fields displayed |
+| Content Type Checkboxes | Intake Agent | ✅ Pass | Multi-select works |
+| Activity Type Checkboxes | Intake Agent | ✅ Pass | Multi-select works |
+| Period Selector | Activity Reporter | ✅ Pass | Dropdown with presets |
+| Date Pickers | Activity Reporter | ✅ Pass | Start/End date inputs |
+| Projects Table | Admin | ✅ Pass | CRUD actions visible |
+| Plan Item Types | Admin | ✅ Pass | System types protected |
+| Sub-tab Navigation | All | ✅ Pass | Tabs switch correctly |
+
+### Screenshots Captured
+1. `01-main-layout-no-project.png` - Initial select project view
+2. `02-admin-projects-tab.png` - Admin projects dropdown open
+3. `03-plan-view-with-items.png` - Plan tree with Backend Development
+4. `04-plan-tree-expanded.png` - Plan view after expand
+5. `05-add-plan-item-dialog.png` - Add plan item form
+6. `06-intake-agent-form.png` - Intake agent full form
+7. `07-activity-reporter.png` - Activity reporter parameters
+8. `08-admin-config-projects.png` - Admin config projects
+9. `09-admin-plan-item-types.png` - Plan item types management
+
+### Bug Fixed During Testing
+- **File:** `frontend/src/pages/plan/PlanPage.tsx` line 148
+- **Issue:** `currentProject.status.replace(...)` crashed when status was undefined
+- **Fix:** Added fallback: `(currentProject.status || 'active').replace(...)`
 
 ---
 
@@ -117,7 +158,9 @@ Browser UI testing requires Claude-in-Chrome extension. Servers verified running
 2. **Content Creation**: Requires proper `contentTypeIds` and `activityTypeIds` arrays.
 
 ### UI Issues
-Not tested due to Chrome extension unavailability.
+1. **Session Timeout**: JWT sessions expire quickly during page navigation/refresh
+2. **Dialog Viewport**: Add dialog Cancel/Close buttons can be outside viewport on smaller screens
+3. **Credentials Mismatch**: Test credentials documented in acceptance criteria don't match actual seed data
 
 ---
 

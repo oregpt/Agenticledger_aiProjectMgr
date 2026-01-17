@@ -718,3 +718,58 @@ Multi-tenant AI-powered project management and status reporting tool.
   - 201 Created is correct REST status for POST, tests should accept both 200/201
   - Test data structures must exactly match Zod schema definitions
 ---
+
+## 2026-01-17 - REL-004
+- Executed browser testing using Playwright MCP tools
+- **Servers:** Backend on port 3001, Frontend on port 5173 (with proxy to backend)
+- **Test Credentials:** orgadmin@acme.local / orgadmin123 (not admin@example.com as documented)
+- **Bug Found and Fixed:**
+  - PlanPage.tsx line 148: `currentProject.status.replace(...)` crashed when status was undefined
+  - Fixed by adding fallback: `(currentProject.status || 'active').replace(...)`
+- **Features Tested:**
+  1. **Login Flow:** Works correctly with orgadmin credentials
+  2. **Main Layout:** Header with logo, project switcher, org switcher, user menu, 4-tab navigation
+  3. **Plan Agent Tab:**
+     - Plan View with tree hierarchy - ✅ Works
+     - Expand/Collapse buttons - ✅ Works
+     - Add Item button - ✅ Dialog opens with full form
+     - Project info card with status badge - ✅ Works (after fix)
+     - Sub-tabs (Plan View, Plan Updater, Import CSV) - ✅ Works
+  4. **Intake Agent Tab:**
+     - Content form with all fields - ✅ Works
+     - Content type checkboxes - ✅ Works
+     - Activity type checkboxes - ✅ Works
+     - Date picker - ✅ Works
+     - File upload dropzone - ✅ Displayed
+  5. **Activity Reporter Tab:**
+     - Period selector (This Week, etc.) - ✅ Works
+     - Date pickers - ✅ Works
+     - Generate Report button - ✅ Displayed
+  6. **Admin Tab:**
+     - Projects table with CRUD - ✅ Works
+     - Plan Item Types table - ✅ Works (system types protected)
+     - Content Types tab - ✅ Available
+     - Activity Types tab - ✅ Available
+- **Screenshots Captured:**
+  - 01-main-layout-no-project.png - Initial view requiring project selection
+  - 02-admin-projects-tab.png - Admin projects list
+  - 03-plan-view-with-items.png - Plan tree with items
+  - 04-plan-tree-expanded.png - Plan tree view
+  - 05-add-plan-item-dialog.png - Add plan item form
+  - 06-intake-agent-form.png - Intake agent full form
+  - 07-activity-reporter.png - Activity reporter page
+  - 08-admin-config-projects.png - Admin config projects tab
+  - 09-admin-plan-item-types.png - Plan item types management
+- **UI Issues Found:**
+  1. Session expires quickly on page navigation (JWT token expiry or storage issue)
+  2. Add dialog "Cancel" button outside viewport on some screens
+  3. Test credentials documented as admin@example.com don't exist - actual: orgadmin@acme.local
+- **Files Changed:**
+  - frontend/src/pages/plan/PlanPage.tsx (status undefined fix)
+- **Learnings:**
+  - Backend runs on port 3001, not 5000 as documented in acceptance criteria
+  - Frontend proxies /api to localhost:3001
+  - Playwright works well for automated UI testing
+  - ESC key doesn't always close dialogs - may need specific close button
+  - Status badge display needs null check for project status field
+---

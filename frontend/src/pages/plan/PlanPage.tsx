@@ -145,7 +145,7 @@ export function PlanPage() {
               currentProject.status === 'on_hold' ? 'bg-yellow-100 text-yellow-700' :
               'bg-gray-100 text-gray-700'
             }`}>
-              {currentProject.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              {(currentProject.status || 'active').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </span>
           </div>
         </CardHeader>
