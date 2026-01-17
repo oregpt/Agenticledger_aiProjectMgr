@@ -263,13 +263,13 @@ async function main() {
   // ============================================================================
   console.log('Creating initial platform admin user...');
 
-  const passwordHash = await bcrypt.hash('platformadmin123', 12);
+  const passwordHash = await bcrypt.hash('admin123', 12);
 
   const platformAdmin = await prisma.user.upsert({
-    where: { email: 'platformadmin@platform.local' },
+    where: { email: 'admin@agenticledger.ai' },
     update: {},
     create: {
-      email: 'platformadmin@platform.local',
+      email: 'admin@agenticledger.ai',
       passwordHash,
       firstName: 'Platform',
       lastName: 'Admin',
@@ -467,8 +467,8 @@ async function main() {
   console.log('\nTest Credentials:');
   console.log('----------------------------------------');
   console.log('Platform Admin:');
-  console.log('  Email: platformadmin@platform.local');
-  console.log('  Password: platformadmin123');
+  console.log('  Email: admin@agenticledger.ai');
+  console.log('  Password: admin123');
   console.log('');
   console.log('Org Admin (Acme Corp):');
   console.log('  Email: orgadmin@acme.local');
