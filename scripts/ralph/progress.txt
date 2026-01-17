@@ -502,3 +502,37 @@ Multi-tenant AI-powered project management and status reporting tool.
   - Tab-based admin UI scales well for multiple configuration sections
   - System type protection with visual lock indicator prevents accidental modification
 ---
+
+## 2026-01-17 - US-013
+- Created main app layout with professional 4-agent tab navigation
+- Created AgentLayout component at frontend/src/components/layout/AgentLayout.tsx:
+  - Full header with Logo ("AI"), App Name ("Project Manager"), Project Switcher, Org Switcher, User Menu
+  - Tab navigation bar with 4 tabs: Plan Agent, Intake Agent, Activity Reporter, Admin
+  - Responsive design with mobile project switcher placement
+  - Settings icon in header linking to /settings
+- Tab navigation features:
+  - Blue color scheme following design system (bg-blue-50, text-blue-700 for active)
+  - Tabs link to: /plan, /intake, /reporter, /admin/config
+  - Project-requiring tabs show disabled state when no project selected
+  - Admin tab does not require project selection
+- Built-in project selection guard:
+  - Shows "Select a Project" message with project switcher for tabs that require project
+  - Icon and description help users understand what to do
+- Updated App.tsx with dual layout structure:
+  - AgentLayout wraps agent pages (/plan, /intake, /reporter, /admin/config, /settings)
+  - Legacy AppLayout remains for dashboard, admin pages, platform admin
+  - Default route redirects to /plan instead of /dashboard
+- Created dedicated SettingsPage at frontend/src/pages/settings/SettingsPage.tsx
+- **Files changed:**
+  - frontend/src/components/layout/AgentLayout.tsx (new)
+  - frontend/src/pages/settings/SettingsPage.tsx (new)
+  - frontend/src/App.tsx (restructured routes with dual layouts)
+  - frontend/src/components/layout/AppLayout.tsx (removed AgentTabNavigation import)
+- **Learnings:**
+  - Dual layout approach allows gradual migration from sidebar to tab navigation
+  - Built-in project guard in layout is cleaner than separate RequireProject wrapper
+  - Tab navigation with requiresProject flag simplifies conditional behavior
+  - Responsive design with hidden elements on mobile maintains usability
+  - Blue color scheme from SPEC.md (primary-600, primary-700) provides professional look
+  - useLocation().pathname enables dynamic active tab detection
+---

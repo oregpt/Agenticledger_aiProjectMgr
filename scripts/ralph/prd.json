@@ -300,8 +300,8 @@
         "Show 'Select a Project' message if no project selected"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": "This is the main navigation structure"
+      "passes": true,
+      "notes": "AgentLayout provides full header with branding, project switcher, and user menu. Tab navigation with blue active state styling. Project guard built into layout - tabs requiring project show disabled state when no project selected."
     },
     {
       "id": "US-014",
