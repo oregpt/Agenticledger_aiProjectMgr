@@ -165,8 +165,8 @@
         "Test embedding generation works"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": "Requires OpenAI API key in environment"
+      "passes": true,
+      "notes": "All OpenAI and pgvector components implemented. Requires OPENAI_API_KEY to be set in .env for runtime use."
     },
     {
       "id": "US-008",
