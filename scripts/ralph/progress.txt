@@ -456,3 +456,49 @@ Multi-tenant AI-powered project management and status reporting tool.
   - Truncating long text prevents table cell overflow in slides
   - Color scheme consistency across slides improves presentation quality
 ---
+
+## 2026-01-17 - US-012
+- Implemented Admin Configuration UI for managing system types
+- Created backend config module:
+  - config.schema.ts - Zod schemas for plan item types, content types, activity types
+  - config.service.ts - CRUD operations with system type protection
+  - config.controller.ts - HTTP handlers for all operations
+  - config.routes.ts - Route definitions with auth middleware
+- Implemented endpoints at /api/config:
+  - GET/POST/PUT/DELETE /plan-item-types - Plan item type management
+  - GET/POST/PUT/DELETE /content-types - Content type management
+  - GET/POST/PUT/DELETE /activity-types - Activity type management
+- Backend features:
+  - Duplicate slug checking within organization scope
+  - System type protection (cannot edit/delete isSystem=true types)
+  - Soft delete using isActive flag
+  - Global types (organizationId: null) visible to all orgs
+- Frontend ConfigPage.tsx at /admin/config with 4 tabs:
+  - Projects: Full CRUD with name, client, description, status, dates
+  - Plan Item Types: name, slug, level, icon, color, description
+  - Content Types: name, slug, icon, color, description
+  - Activity Types: name, slug, icon, color, description
+- UI features:
+  - Search/filter input for each tab
+  - Data tables with sortable columns
+  - Create/Edit dialogs with form validation
+  - Delete confirmation using AlertDialog component
+  - System types marked with Lock icon (edit/delete disabled)
+  - Loading states for all operations
+- Added AlertDialog component from shadcn/ui (@radix-ui/react-alert-dialog)
+- **Files changed:**
+  - backend/src/modules/config/* (new - 4 files)
+  - backend/src/app.ts (registered /api/config routes)
+  - frontend/src/pages/admin/ConfigPage.tsx (new)
+  - frontend/src/api/config.api.ts (new)
+  - frontend/src/components/ui/alert-dialog.tsx (new)
+  - frontend/src/App.tsx (added /admin/config route)
+  - frontend/package.json (added @radix-ui/react-alert-dialog)
+- **Learnings:**
+  - requireOrgContext middleware ensures organizationId is set before accessing org-scoped data
+  - List APIs returning directly (not wrapped in { items: [] }) simplify frontend consumption
+  - Project type enum values must match Prisma enum exactly (active, on_hold, completed, cancelled)
+  - AlertDialog from shadcn provides better UX than browser confirm() for destructive actions
+  - Tab-based admin UI scales well for multiple configuration sections
+  - System type protection with visual lock indicator prevents accidental modification
+---
