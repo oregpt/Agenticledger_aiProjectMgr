@@ -98,15 +98,16 @@ npx tsx comprehensive-test-suite/runTests.ts d1
 ## Browser Test Results
 
 **Status:** Passed
-**Method:** Playwright MCP Tools
-**Screenshots:** 9 captured in `.playwright-mcp/screenshots/`
+**Method:** Claude-in-Chrome MCP Tools
+**Last Test Date:** 2026-01-16
 
 ### Servers Verified
-- Backend: Port 3001 (via existing process)
+- Backend: Port 3001 (restarted with OpenAI key configured)
 - Frontend: Port 5173 (Vite dev server)
 
 ### Test Credentials
 - **Org Admin**: orgadmin@acme.local / orgadmin123
+- **Platform Admin**: platformadmin@platform.local / platformadmin123
 - Note: Documented credentials (admin@example.com) do not exist in seed
 
 ### Features Tested
@@ -117,29 +118,42 @@ npx tsx comprehensive-test-suite/runTests.ts d1
 | Main Layout | - | ✅ Pass | Header, tabs, project switcher |
 | Plan View Tree | Plan Agent | ✅ Pass | Displays hierarchy correctly |
 | Expand/Collapse | Plan Agent | ✅ Pass | Tree controls work |
-| Add Item Dialog | Plan Agent | ✅ Pass | Full form with type selector |
-| Project Info Card | Plan Agent | ✅ Pass | After bug fix (status undefined) |
-| Content Form | Intake Agent | ✅ Pass | All fields displayed |
-| Content Type Checkboxes | Intake Agent | ✅ Pass | Multi-select works |
-| Activity Type Checkboxes | Intake Agent | ✅ Pass | Multi-select works |
-| Period Selector | Activity Reporter | ✅ Pass | Dropdown with presets |
+| Add Item Dialog | Plan Agent | ✅ Pass | Full form with type selector, status, dates |
+| Project Info Card | Plan Agent | ✅ Pass | Shows project name, client, start date, status |
+| Content Form | Intake Agent | ✅ Pass | Title, date, plan item link, tags |
+| Text Content Area | Intake Agent | ✅ Pass | Large textarea for content input |
+| File Upload | Intake Agent | ✅ Pass | Supports PDF, DOCX, TXT, MD |
+| Content Type Checkboxes | Intake Agent | ✅ Pass | Meeting, Note, Transcript |
+| Activity Type Checkboxes | Intake Agent | ✅ Pass | Action Item, Blocker, Decision, etc. |
+| AI Analysis Button | Intake Agent | ✅ Pass | "Analyze with AI" primary action |
+| Period Selector | Activity Reporter | ✅ Pass | Dropdown with "This Week" preset |
 | Date Pickers | Activity Reporter | ✅ Pass | Start/End date inputs |
-| Projects Table | Admin | ✅ Pass | CRUD actions visible |
-| Plan Item Types | Admin | ✅ Pass | System types protected |
+| Generate Report Button | Activity Reporter | ✅ Pass | Primary action button |
+| Projects Table | Admin | ✅ Pass | Name, Client, Start Date, Status, Actions |
+| Plan Item Types | Admin | ✅ Pass | Custom and System types displayed |
+| System Type Protection | Admin | ✅ Pass | Workstream, Milestone, Activity, Task, Subtask |
+| Content Types Tab | Admin | ✅ Pass | Tab navigation works |
+| Activity Types Tab | Admin | ✅ Pass | Tab navigation works |
 | Sub-tab Navigation | All | ✅ Pass | Tabs switch correctly |
 
-### Screenshots Captured
-1. `01-main-layout-no-project.png` - Initial select project view
-2. `02-admin-projects-tab.png` - Admin projects dropdown open
-3. `03-plan-view-with-items.png` - Plan tree with Backend Development
-4. `04-plan-tree-expanded.png` - Plan view after expand
-5. `05-add-plan-item-dialog.png` - Add plan item form
-6. `06-intake-agent-form.png` - Intake agent full form
-7. `07-activity-reporter.png` - Activity reporter parameters
-8. `08-admin-config-projects.png` - Admin config projects
-9. `09-admin-plan-item-types.png` - Plan item types management
+### Test Session Screenshots (Claude-in-Chrome)
+Screenshots captured during automated browser testing:
+1. Login page with email/password form
+2. Plan Agent with project info card and plan tree
+3. Plan tree expanded showing "Backend Development" workstream
+4. Add Plan Item dialog with full form
+5. Intake Agent form with content details section
+6. Intake Agent content/file upload section
+7. Intake Agent content type and activity type checkboxes
+8. Activity Reporter with period selector and date pickers
+9. Admin Config Projects table
+10. Admin Config Plan Item Types with system types
 
-### Bug Fixed During Testing
+### Known UI Issues Observed
+1. **Session Timeout**: JWT sessions expire quickly during page navigation (multiple re-logins needed during testing)
+2. **Project Selector**: Requires manual selection after login (no default project)
+
+### Previous Bug Fixed
 - **File:** `frontend/src/pages/plan/PlanPage.tsx` line 148
 - **Issue:** `currentProject.status.replace(...)` crashed when status was undefined
 - **Fix:** Added fallback: `(currentProject.status || 'active').replace(...)`
