@@ -156,3 +156,72 @@ Multi-tenant AI-powered project management and status reporting tool.
   - API response.data can be undefined - always check `response.success && response.data`
   - Pre-existing TS errors in starter code don't affect runtime - focus on module-specific errors
 ---
+
+## 2026-01-17 - US-005
+- Added ContentType model: id, organizationId (nullable for global), name, slug, description, icon, color, isSystem, isActive
+- Added ActivityItemType model: same structure as ContentType
+- Added ContentItem model with all SPEC.md fields:
+  - Core: id (UUID), projectId, planItemIds[], contentTypeIds[], activityTypeIds[]
+  - Source: sourceType, title, dateOccurred, projectWeek, tags[]
+  - Content: rawContent, fileReference, fileName, fileSize, mimeType
+  - AI: aiSummary, aiExtractedEntities (JSON), processingStatus
+  - Lineage: parentItemId, createdBy, createdByUserId
+- Created content-items module with:
+  - content-items.schema.ts - Zod validation schemas for create/update/list
+  - content-items.service.ts - CRUD + type lookups + project week calculation
+  - content-items.controller.ts - HTTP handlers
+  - content-items.routes.ts - Express routes with auth/org context middleware
+- Registered routes in app.ts at /api/content-items
+- Added nested route GET /api/projects/:id/content to projects routes
+- Added type lookup endpoints:
+  - GET /api/projects/lookup/content-types
+  - GET /api/projects/lookup/activity-item-types
+- Seeded default ContentTypes: meeting, document, email, note, transcript
+- Seeded default ActivityItemTypes: status_update, action_item, risk, decision, blocker, milestone_update, dependency
+- **Files changed:**
+  - backend/prisma/schema.prisma (added 3 models + relations)
+  - backend/prisma/migrations/20260117000416_add_content_types_and_items/
+  - backend/prisma/seed.ts (added ContentType and ActivityItemType seeding)
+  - backend/src/modules/content-items/* (new - 4 files)
+  - backend/src/modules/projects/projects.routes.ts (added content routes)
+  - backend/src/app.ts (registered content-items routes)
+- **Learnings:**
+  - Prisma arrays (String[], Int[]) work well for multi-select fields like planItemIds, contentTypeIds
+  - Use Prisma.InputJsonValue cast when updating JSON fields to satisfy strict typing
+  - Conditional spread pattern `...(input.x !== undefined && { x: input.x })` can cause TS issues - use explicit if statements
+  - Type lookup endpoints placed before :id routes to avoid path conflicts
+  - Windows Prisma generate can fail with EPERM on locked DLL - migration still applies
+---
+
+## 2026-01-17 - US-006
+- Created complete Intake Agent UI with form for content submission
+- Created IntakePage.tsx with:
+  - Title input field
+  - Date picker for Date Occurred (required)
+  - Hierarchical plan item dropdown with visual indentation
+  - Multi-select checkboxes for Content Type (meeting, document, email, note, transcript)
+  - Multi-select checkboxes for Activity Type (status_update, action_item, risk, etc.)
+  - Tags input with add/remove functionality
+  - Text content textarea
+  - Drag-and-drop file upload zone (supports PDF, DOCX, TXT, MD)
+  - Submit button with loading state
+  - Success message display
+- Created content-items.api.ts with:
+  - getContentTypes() - fetch all content types
+  - getActivityItemTypes() - fetch all activity item types
+  - getProjectContent() - list content items for a project
+  - create() / get() / update() / delete() - CRUD operations
+- Added /intake route to App.tsx
+- Inbox icon already in Sidebar.tsx iconMap
+- Intake menu already in seed.ts with permissions for all roles
+- **Files changed:**
+  - frontend/src/pages/intake/IntakePage.tsx (new)
+  - frontend/src/api/content-items.api.ts (new)
+  - frontend/src/App.tsx (added intake route)
+  - frontend/src/components/layout/Sidebar.tsx (Inbox icon already present)
+- **Learnings:**
+  - Hierarchical dropdown with indentation is simpler than cascading dropdowns for tree selection
+  - Checkbox-based multi-select provides better UX than multi-select dropdown for small sets
+  - File type validation should check both MIME type and extension (for .md files)
+  - Form reset after successful submission improves UX for repeated entries
+---

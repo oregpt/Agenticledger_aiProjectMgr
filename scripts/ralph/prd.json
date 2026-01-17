@@ -144,8 +144,8 @@
         "Show success message with created item details"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "IntakePage uses hierarchical dropdown for plan items instead of cascading dropdowns. Multi-select implemented with checkboxes."
     },
     {
       "id": "US-007",
