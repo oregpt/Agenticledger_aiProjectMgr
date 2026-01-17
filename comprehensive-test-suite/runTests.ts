@@ -71,8 +71,8 @@ async function main() {
 
     // Add delay between domains to avoid rate limiting (except for first domain)
     if (i > 0) {
-      console.log('\n  [Waiting 2s to avoid rate limiting...]\n');
-      await wait(2000);
+      console.log('\n  [Waiting 6s to avoid rate limiting...]\n');
+      await wait(6000);
     }
 
     try {

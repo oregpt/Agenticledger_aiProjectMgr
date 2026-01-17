@@ -103,6 +103,7 @@ export async function runD4Tests(): Promise<ReturnType<TestRunner['summary']>> {
     const contentData = {
       projectId: testProjectId,
       title: 'Test Meeting Notes',
+      sourceType: 'text', // Required: file, text, calendar, transcript, email
       rawContent: `
         Meeting with client on January 15th.
 
@@ -119,7 +120,7 @@ export async function runD4Tests(): Promise<ReturnType<TestRunner['summary']>> {
         Risks:
         - Database migration may take longer than expected
       `,
-      dateOccurred: new Date().toISOString(),
+      dateOccurred: new Date().toISOString().split('T')[0], // Date only, not datetime
       contentTypeIds: [1], // meeting
       activityTypeIds: [1], // status_update
       tags: ['meeting', 'sprint-1'],
@@ -143,8 +144,10 @@ export async function runD4Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
     const response = await post('/content-items', adminUser, {
       projectId: testProjectId,
+      sourceType: 'text',
       rawContent: 'Some content',
-      dateOccurred: new Date().toISOString(),
+      dateOccurred: new Date().toISOString().split('T')[0],
+      // Missing title
     });
     const data = await response.json();
 
@@ -155,8 +158,10 @@ export async function runD4Tests(): Promise<ReturnType<TestRunner['summary']>> {
   await runner.test('POST /api/content-items - Create without projectId should fail', async () => {
     const response = await post('/content-items', adminUser, {
       title: 'Missing Project',
+      sourceType: 'text',
       rawContent: 'Some content',
-      dateOccurred: new Date().toISOString(),
+      dateOccurred: new Date().toISOString().split('T')[0],
+      // Missing projectId
     });
     const data = await response.json();
 
@@ -236,6 +241,7 @@ export async function runD4Tests(): Promise<ReturnType<TestRunner['summary']>> {
 
     const analyzeData = {
       projectId: testProjectId,
+      sourceType: 'text',
       rawContent: `
         Weekly status meeting with the development team.
 
@@ -255,7 +261,7 @@ export async function runD4Tests(): Promise<ReturnType<TestRunner['summary']>> {
         - Approved use of Redis for caching
         - Will proceed with phased rollout approach
       `,
-      dateOccurred: new Date().toISOString(),
+      dateOccurred: new Date().toISOString().split('T')[0],
       contentTypeIds: [1],
       activityTypeIds: [1],
     };
@@ -287,8 +293,9 @@ export async function runD4Tests(): Promise<ReturnType<TestRunner['summary']>> {
     const saveData = {
       projectId: testProjectId,
       title: 'AI Analyzed Content',
+      sourceType: 'text',
       rawContent: 'Content with AI suggestions applied',
-      dateOccurred: new Date().toISOString(),
+      dateOccurred: new Date().toISOString().split('T')[0],
       contentTypeIds: [1, 2], // meeting, document
       activityTypeIds: [1, 2], // status_update, action_item
       tags: ['ai-analyzed'],
@@ -296,7 +303,9 @@ export async function runD4Tests(): Promise<ReturnType<TestRunner['summary']>> {
       extractedItems: [
         {
           title: 'Extracted Action Item',
+          sourceType: 'text',
           rawContent: 'Deploy to staging by Wednesday',
+          dateOccurred: new Date().toISOString().split('T')[0],
           contentTypeIds: [1],
           activityTypeIds: [2], // action_item
         },

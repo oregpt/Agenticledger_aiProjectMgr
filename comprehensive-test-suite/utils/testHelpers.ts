@@ -92,7 +92,7 @@ export function getCachedUser(email: string): TestUser | undefined {
 }
 
 /**
- * Make an authenticated API request
+ * Make an authenticated API request with retry logic for rate limiting
  */
 export async function apiRequest(
   method: string,
@@ -117,7 +117,30 @@ export async function apiRequest(
     options.body = JSON.stringify(body);
   }
 
-  return fetch(`${API_BASE_URL}${path}`, options);
+  // Retry logic for rate limiting (429 errors)
+  const maxRetries = 3;
+  let lastResponse: Response | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(`${API_BASE_URL}${path}`, options);
+    lastResponse = response;
+
+    // If not rate limited, return immediately
+    if (response.status !== 429) {
+      return response;
+    }
+
+    // If this was the last attempt, return the 429 response
+    if (attempt === maxRetries) {
+      return response;
+    }
+
+    // Wait with exponential backoff before retrying (1s, 2s, 4s)
+    const waitMs = Math.pow(2, attempt) * 1000;
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+  }
+
+  return lastResponse!;
 }
 
 /**
