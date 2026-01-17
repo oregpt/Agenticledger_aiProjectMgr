@@ -572,3 +572,41 @@ Multi-tenant AI-powered project management and status reporting tool.
   - InfoResult from pdf-parse needs double type cast for safe metadata access
   - .gitkeep pattern with "uploads/*" and "!uploads/.gitkeep" tracks empty directory
 ---
+
+## 2026-01-17 - US-015
+- Polished UI with design system colors and typography from SPEC.md
+- Updated tailwind.config.js with design system:
+  - Primary colors (deep blue): shades 50, 100, 500, 600, 700, 900
+  - Neutral colors (slate): full shade range 50-900
+  - Status colors: success (#10b981), warning (#f59e0b), error (#ef4444), info (#3b82f6)
+  - Custom box shadows: card, card-hover for consistent elevation
+  - Custom animations: pulse-subtle for loading, shimmer for skeletons
+- Added Inter font from Google Fonts:
+  - CSS import in globals.css
+  - Set as primary font-family in tailwind config
+  - Weights: 400 (normal), 500 (medium), 600 (semibold), 700 (bold)
+- Updated StatusBadge component:
+  - Uses design system neutral/emerald/amber/red colors
+  - Consistent border styling with outline variant
+  - Added size prop for sm/default variants
+  - Added more status types: blocked, active, pending, draft
+- Created Skeleton component for loading states:
+  - Base Skeleton with pulse animation
+  - SkeletonCard for card placeholders
+  - SkeletonTable for data table loading
+  - SkeletonForm for form loading states
+  - SkeletonPlanTree for plan tree loading
+- Updated index.html title to "AI Project Manager"
+- **Files changed:**
+  - frontend/tailwind.config.js (updated with design system)
+  - frontend/src/styles/globals.css (added Inter font import)
+  - frontend/src/components/plan/StatusBadge.tsx (updated colors)
+  - frontend/src/components/ui/skeleton.tsx (new)
+  - frontend/index.html (updated title)
+- **Learnings:**
+  - Tailwind color shades use direct hex values for consistency with SPEC.md
+  - Google Fonts CSS import is simpler than @font-face for common fonts
+  - Skeleton components with variants reduce boilerplate in pages
+  - StatusBadge with outline variant and colored borders looks more refined
+  - Shimmer animation creates better loading UX than simple pulse
+---
