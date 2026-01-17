@@ -105,8 +105,8 @@
         "Create sample CSV template for download"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented with tabs UI approach instead of dialog. CSV format uses hierarchy columns."
     },
     {
       "id": "US-005",

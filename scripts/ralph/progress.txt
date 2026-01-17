@@ -124,3 +124,35 @@ Multi-tenant AI-powered project management and status reporting tool.
   - PlanItemType id is number (autoincrement from Prisma) not UUID - check types carefully
   - Parent type level + 1 gives suggested child type for Add Child functionality
 ---
+
+## 2026-01-16 - US-004
+- Implemented CSV import for plan items with full UI workflow
+- Created components:
+  - PlanImport.tsx - Main import component with drag-drop, preview, and results
+  - Updated PlanPage.tsx - Added sub-tabs (Plan View, Import CSV) using Tabs component
+- Backend already had import endpoints from previous work, fixed TypeScript issues:
+  - Fixed Object.keys() call on unknown[] from csv-parse
+  - Fixed parseDate returning string instead of Date for Prisma fields
+- Added API functions to plan-items.api.ts:
+  - previewImport() - POST /api/projects/:id/plan/import/preview
+  - importCsv() - POST /api/projects/:id/plan/import
+  - getTemplateUrl() - returns URL for template download
+- CSV import features:
+  - Drag-and-drop file upload with dropzone
+  - CSV preview table showing first 50 rows
+  - Import results with created/updated/error counts
+  - Sample CSV template download
+  - Find-or-create logic for hierarchy items
+- **Files changed:**
+  - frontend/src/components/plan/PlanImport.tsx (new)
+  - frontend/src/pages/plan/PlanPage.tsx (added tabs)
+  - frontend/src/api/plan-items.api.ts (added import functions)
+  - backend/src/modules/plan-items/plan-items.service.ts (TypeScript fixes)
+  - backend/src/modules/projects/projects.routes.ts (multer config for CSV)
+- **Learnings:**
+  - csv-parse returns unknown[] - need type assertion when accessing first record keys
+  - Prisma Date fields need actual Date objects, not ISO strings
+  - Use separate isLoading state vs state machine for button disabled/text logic
+  - API response.data can be undefined - always check `response.success && response.data`
+  - Pre-existing TS errors in starter code don't affect runtime - focus on module-specific errors
+---
