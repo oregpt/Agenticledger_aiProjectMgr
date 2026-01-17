@@ -4,6 +4,7 @@ import * as projectsController from './projects.controller';
 import * as planItemsController from '../plan-items/plan-items.controller';
 import * as contentItemsController from '../content-items/content-items.controller';
 import * as activityReporterController from '../activity-reporter/activity-reporter.controller';
+import * as planUpdaterController from '../plan-updater/plan-updater.controller';
 import { validateBody, validateQuery } from '../../middleware/validation';
 import { authenticate } from '../../middleware/auth';
 import { requireOrgContext } from '../../middleware/orgContext';
@@ -23,6 +24,10 @@ import {
   generateReportSchema,
   listReportsQuerySchema,
 } from '../activity-reporter/activity-reporter.schema';
+import {
+  getPlanSuggestionsSchema,
+  applyPlanUpdatesSchema,
+} from '../plan-updater/plan-updater.schema';
 
 // Configure multer for CSV upload (memory storage, 5MB limit)
 const upload = multer({
@@ -90,6 +95,16 @@ router.put(
 router.delete(
   '/:id',
   projectsController.deleteProject
+);
+
+// ============================================================================
+// Dashboard Routes (under project)
+// ============================================================================
+
+// GET /api/projects/:projectId/dashboard - Get project dashboard with statistics
+router.get(
+  '/:projectId/dashboard',
+  projectsController.getProjectDashboard
 );
 
 // ============================================================================
@@ -163,6 +178,24 @@ router.get(
 router.get(
   '/:projectId/activity-reports/:reportId/sources',
   activityReporterController.getReportSources
+);
+
+// ============================================================================
+// Nested Plan Updater Routes (under project)
+// ============================================================================
+
+// POST /api/projects/:projectId/plan-suggestions - Get AI plan update suggestions
+router.post(
+  '/:projectId/plan-suggestions',
+  validateBody(getPlanSuggestionsSchema),
+  planUpdaterController.getPlanSuggestions
+);
+
+// POST /api/projects/:projectId/plan-updates - Apply selected plan updates
+router.post(
+  '/:projectId/plan-updates',
+  validateBody(applyPlanUpdatesSchema),
+  planUpdaterController.applyPlanUpdates
 );
 
 export default router;

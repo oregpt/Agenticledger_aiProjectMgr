@@ -161,3 +161,186 @@ export const deleteProject = async (projectId: string, organizationId: number) =
 
   return { message: 'Project deleted successfully' };
 };
+
+/**
+ * Get dashboard statistics for a project
+ */
+export const getProjectDashboard = async (projectId: string, organizationId: number) => {
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      organizationId,
+      isActive: true,
+    },
+  });
+
+  if (!project) {
+    throw new AppError(ErrorCodes.NOT_FOUND, 'Project not found', 404);
+  }
+
+  // Get plan items statistics
+  const planItemStats = await prisma.planItem.groupBy({
+    by: ['status'],
+    where: {
+      projectId,
+      isActive: true,
+    },
+    _count: true,
+  });
+
+  const planItemsByType = await prisma.planItem.groupBy({
+    by: ['itemTypeId'],
+    where: {
+      projectId,
+      isActive: true,
+    },
+    _count: true,
+  });
+
+  // Get item type names
+  const itemTypes = await prisma.planItemType.findMany({
+    where: {
+      id: { in: planItemsByType.map(p => p.itemTypeId) },
+    },
+    select: { id: true, name: true },
+  });
+
+  const itemTypeMap = new Map(itemTypes.map(t => [t.id, t.name]));
+
+  // Get total plan items
+  const totalPlanItems = await prisma.planItem.count({
+    where: {
+      projectId,
+      isActive: true,
+    },
+  });
+
+  // Get content item statistics
+  const contentItemStats = await prisma.contentItem.groupBy({
+    by: ['sourceType'],
+    where: {
+      projectId,
+      isActive: true,
+    },
+    _count: true,
+  });
+
+  const totalContentItems = await prisma.contentItem.count({
+    where: {
+      projectId,
+      isActive: true,
+    },
+  });
+
+  // Get recent content items
+  const recentContentItems = await prisma.contentItem.findMany({
+    where: {
+      projectId,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      title: true,
+      sourceType: true,
+      dateOccurred: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+  });
+
+  // Get recent activity reports (if table exists)
+  let recentReports: Array<{
+    id: string;
+    title: string;
+    periodStart: Date;
+    periodEnd: Date;
+    createdAt: Date;
+  }> = [];
+
+  try {
+    recentReports = await prisma.activityReport.findMany({
+      where: {
+        projectId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        title: true,
+        periodStart: true,
+        periodEnd: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+    });
+  } catch {
+    // Table might not exist yet
+  }
+
+  // Content items by week (last 4 weeks)
+  const fourWeeksAgo = new Date();
+  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+  const contentByWeek = await prisma.contentItem.findMany({
+    where: {
+      projectId,
+      isActive: true,
+      dateOccurred: {
+        gte: fourWeeksAgo,
+      },
+    },
+    select: {
+      dateOccurred: true,
+    },
+    orderBy: { dateOccurred: 'asc' },
+  });
+
+  // Group by week
+  const weeklyActivity: Record<string, number> = {};
+  contentByWeek.forEach(item => {
+    const weekStart = new Date(item.dateOccurred);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const weekKey = weekStart.toISOString().split('T')[0];
+    weeklyActivity[weekKey] = (weeklyActivity[weekKey] || 0) + 1;
+  });
+
+  return {
+    project: {
+      id: project.id,
+      name: project.name,
+      client: project.client,
+      description: project.description,
+      status: project.status,
+      startDate: project.startDate,
+      targetEndDate: project.targetEndDate,
+    },
+    planItems: {
+      total: totalPlanItems,
+      byStatus: planItemStats.map(s => ({
+        status: s.status,
+        count: s._count,
+      })),
+      byType: planItemsByType.map(t => ({
+        type: itemTypeMap.get(t.itemTypeId) || 'Unknown',
+        typeId: t.itemTypeId,
+        count: t._count,
+      })),
+    },
+    contentItems: {
+      total: totalContentItems,
+      bySourceType: contentItemStats.map(s => ({
+        sourceType: s.sourceType,
+        count: s._count,
+      })),
+      recent: recentContentItems,
+      weeklyActivity: Object.entries(weeklyActivity).map(([week, count]) => ({
+        week,
+        count,
+      })),
+    },
+    activityReports: {
+      recent: recentReports,
+    },
+  };
+};
