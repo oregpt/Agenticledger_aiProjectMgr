@@ -754,10 +754,9 @@ model ContentChunk {
   // Token count for this chunk
   tokenCount      Int       @default(0)
 
-  // Embedding vector - stored as string, converted to vector in raw queries
-  // Using Unsupported type as Prisma doesn't natively support pgvector
-  // Actual embedding stored via raw SQL
-  embeddingVector Unsupported("vector(1536)")?
+  // Embedding vector - stored as JSON array until pgvector is available
+  // Can migrate to vector(1536) type when using pgvector-enabled database
+  embeddingVector Json?
 
   // Metadata
   metadata        Json      @default("{}")
