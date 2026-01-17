@@ -310,3 +310,60 @@ Multi-tenant AI-powered project management and status reporting tool.
   - Checkbox-based item selection works well for "accept some" workflows
   - Parent-child content item relationships enable lineage tracking
 ---
+
+## 2026-01-17 - US-009
+- Implemented complete Activity Reporter (Agent 2) for AI-powered report generation
+- Created ActivityReport model in Prisma schema:
+  - id, projectId, title, periodStart, periodEnd
+  - workstreamFilter[], activityTypeFilter[] for filtering
+  - summary, reportData (JSON), sourceContentIds[], sourceChunkIds[]
+  - generatedByUserId, generationDurationMs for tracking
+- Created activity-reporter backend module:
+  - activity-reporter.schema.ts - Zod schemas for generate and list
+  - activity-reporter.service.ts - RAG-based report generation service
+  - activity-reporter.controller.ts - HTTP handlers
+  - activity-reporter.routes.ts - Route definitions
+- Created activity-reporter prompts with structured JSON output:
+  - StatusUpdate[], ActionItem[], Risk[], Decision[], Blocker[]
+  - SuggestedPlanUpdates[] for plan item status changes
+  - All items include sourceContentIds and confidence levels
+- Implemented endpoints under /api/projects/:projectId/:
+  - POST /activity-report - Generate new report using AI
+  - GET /activity-reports - List reports with pagination
+  - GET /activity-reports/:id - Get single report
+  - GET /activity-reports/:id/sources - Get source content items
+- Frontend ReporterPage.tsx with:
+  - Period selector (This Week, Last Week, Last 2 Weeks, Custom)
+  - Date pickers for custom range
+  - Generate Report button with loading state
+  - Collapsible sections for each report category
+  - View Source dialog to see original content
+  - Export to Markdown functionality
+- Added UI components:
+  - select.tsx from shadcn/ui (radix-ui/react-select)
+  - collapsible.tsx from shadcn/ui (radix-ui/react-collapsible)
+  - date-fns for date manipulation
+- Updated seed.ts to point Reports menu to /reporter with ClipboardList icon
+- **Files changed:**
+  - backend/prisma/schema.prisma (added ActivityReport model)
+  - backend/src/modules/activity-reporter/* (new - 4 files)
+  - backend/src/services/ai/prompts/activity-reporter.ts (new)
+  - backend/src/modules/projects/projects.routes.ts (added activity-report routes)
+  - backend/prisma/seed.ts (updated Reports menu)
+  - frontend/src/pages/reporter/ReporterPage.tsx (new)
+  - frontend/src/api/activity-reporter.api.ts (new)
+  - frontend/src/components/ui/select.tsx (new)
+  - frontend/src/components/ui/collapsible.tsx (new)
+  - frontend/src/components/layout/Sidebar.tsx (added ClipboardList icon)
+  - frontend/src/App.tsx (added /reporter route)
+  - frontend/package.json (added date-fns, radix-ui dependencies)
+- **Learnings:**
+  - RAG query with descriptive search term finds relevant chunks for report periods
+  - Fallback to raw content when vector search fails provides graceful degradation
+  - Collapsible sections with Radix UI provide clean report organization
+  - Prisma db push can apply schema when migrate fails on advisory lock
+  - Period presets (This Week, Last Week) reduce friction for common use cases
+  - date-fns startOfWeek/endOfWeek with weekStartsOn option handles Monday start
+  - View Source dialog with filtered content IDs shows only relevant sources
+  - Markdown export with blob download works well for simple exports
+---

@@ -210,8 +210,8 @@
         "Add export buttons: Markdown, PowerPoint"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Full Activity Reporter implemented with RAG-based report generation. Export to Markdown available. PowerPoint export deferred to US-011 Output Formatter."
     },
     {
       "id": "US-010",
