@@ -20,6 +20,7 @@ import planItemsRoutes from './modules/plan-items/plan-items.routes.js';
 import planItemTypesRoutes from './modules/plan-items/plan-item-types.routes.js';
 import contentItemsRoutes from './modules/content-items/content-items.routes.js';
 import outputFormatterRoutes from './modules/output-formatter/output-formatter.routes.js';
+import configRoutes from './modules/config/config.routes.js';
 
 const app = express();
 
@@ -72,6 +73,7 @@ app.use('/api/plan-items', planItemsRoutes);
 app.use('/api/plan-item-types', planItemTypesRoutes);
 app.use('/api/content-items', contentItemsRoutes);
 app.use('/api/format', outputFormatterRoutes);
+app.use('/api/config', configRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

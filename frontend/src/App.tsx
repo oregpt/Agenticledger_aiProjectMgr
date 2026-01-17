@@ -30,6 +30,7 @@ import { ReporterPage } from '@/pages/reporter/ReporterPage';
 // Admin Pages
 import { OrganizationPage } from '@/pages/admin/OrganizationPage';
 import { RolesPage } from '@/pages/admin/RolesPage';
+import { ConfigPage } from '@/pages/admin/ConfigPage';
 
 // Platform Admin Pages
 import { PlatformSettingsPage } from '@/pages/platform/PlatformSettingsPage';
@@ -82,6 +83,7 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin/organization" element={<OrganizationPage />} />
         <Route path="/admin/roles" element={<RolesPage />} />
+        <Route path="/admin/config" element={<ConfigPage />} />
 
         {/* Platform Admin Routes */}
         <Route path="/platform/settings" element={<PlatformSettingsPage />} />
