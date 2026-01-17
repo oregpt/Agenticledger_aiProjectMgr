@@ -339,19 +339,35 @@ export function IntakePage() {
     setError(null);
 
     try {
-      const input: SaveAnalyzedContentInput = {
-        projectId: currentProject.id,
-        title: title.trim(),
-        dateOccurred,
-        rawContent: rawContent.trim(),
-        sourceType: file ? 'file' : 'text',
-        contentTypeIds: selectedContentTypeIds,
-        activityTypeIds: selectedActivityTypeIds,
-        planItemIds: selectedPlanItemIds,
-        tags,
-      };
+      let response;
 
-      const response = await contentItemsApi.saveAnalyzed(input);
+      if (file) {
+        // Upload file and create content item
+        response = await contentItemsApi.uploadFile(file, {
+          projectId: currentProject.id,
+          title: title.trim(),
+          dateOccurred,
+          planItemIds: selectedPlanItemIds,
+          contentTypeIds: selectedContentTypeIds,
+          activityTypeIds: selectedActivityTypeIds,
+          tags,
+        });
+      } else {
+        // Save text content
+        const input: SaveAnalyzedContentInput = {
+          projectId: currentProject.id,
+          title: title.trim(),
+          dateOccurred,
+          rawContent: rawContent.trim(),
+          sourceType: 'text',
+          contentTypeIds: selectedContentTypeIds,
+          activityTypeIds: selectedActivityTypeIds,
+          planItemIds: selectedPlanItemIds,
+          tags,
+        };
+        response = await contentItemsApi.saveAnalyzed(input);
+      }
+
       if (response.success) {
         setSuccess(true);
         resetForm();

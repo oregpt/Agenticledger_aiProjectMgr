@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { OrgSwitcher } from '@/components/common/OrgSwitcher';
+import { ProjectSwitcher } from '@/components/plan/ProjectSwitcher';
 import authApi from '@/api/auth.api';
 
 export function Header() {
@@ -23,13 +24,19 @@ export function Header() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-6">
-      {/* Organization Switcher */}
-      <div className="flex items-center gap-2">
+      {/* Left side: Org Switcher + Project Switcher */}
+      <div className="flex items-center gap-4">
         <OrgSwitcher />
+        <div className="h-6 w-px bg-border" />
+        <ProjectSwitcher />
       </div>
 
       {/* User Menu */}
       <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+          <Settings className="h-4 w-4" />
+        </Button>
+
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
             {user?.firstName?.[0]}

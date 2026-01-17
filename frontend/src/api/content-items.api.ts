@@ -262,6 +262,37 @@ export const contentItemsApi = {
     const response = await apiClient.post('/content-items/save-analyzed', input);
     return response.data;
   },
+
+  // Upload a file and create content item
+  uploadFile: async (
+    file: File,
+    data: {
+      projectId: string;
+      title?: string;
+      dateOccurred?: string;
+      planItemIds?: string[];
+      contentTypeIds?: number[];
+      activityTypeIds?: number[];
+      tags?: string[];
+    }
+  ): Promise<ApiResponse<ContentItem>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('projectId', data.projectId);
+    if (data.title) formData.append('title', data.title);
+    if (data.dateOccurred) formData.append('dateOccurred', data.dateOccurred);
+    if (data.planItemIds) formData.append('planItemIds', JSON.stringify(data.planItemIds));
+    if (data.contentTypeIds) formData.append('contentTypeIds', JSON.stringify(data.contentTypeIds));
+    if (data.activityTypeIds) formData.append('activityTypeIds', JSON.stringify(data.activityTypeIds));
+    if (data.tags) formData.append('tags', JSON.stringify(data.tags));
+
+    const response = await apiClient.post('/content-items/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };
 
 export default contentItemsApi;
