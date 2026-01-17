@@ -80,6 +80,7 @@ model Project {
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   planItems       PlanItem[]
   contentItems    ContentItem[]
+  activityReports ActivityReport[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -727,4 +728,44 @@ model ContentChunk {
 
   @@index([contentItemId])
   @@index([chunkIndex])
+}
+
+// ============================================================================
+// ACTIVITY REPORTS (Generated reports from Activity Reporter Agent)
+// ============================================================================
+
+model ActivityReport {
+  id              String    @id @default(uuid())
+  projectId       String
+
+  // Report parameters
+  title           String
+  periodStart     DateTime  @db.Date
+  periodEnd       DateTime  @db.Date
+  workstreamFilter String[] @default([])  // Plan item IDs to filter by
+  activityTypeFilter Int[]  @default([])  // Activity type IDs to filter by
+
+  // Generated content
+  summary         String    @db.Text
+  reportData      Json      @default("{}")  // Structured report data (status_updates, action_items, risks, etc.)
+
+  // Source tracking
+  sourceContentIds String[] @default([])  // ContentItem IDs used to generate this report
+  sourceChunkIds   String[] @default([])  // ContentChunk IDs used
+
+  // Metadata
+  generatedByUserId Int?
+  generationDurationMs Int?
+
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([periodStart, periodEnd])
+  @@index([isActive])
 }

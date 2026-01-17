@@ -1,23 +1,28 @@
 import { Router } from 'express';
 import multer from 'multer';
-import * as projectsController from './projects.controller.js';
-import * as planItemsController from '../plan-items/plan-items.controller.js';
-import * as contentItemsController from '../content-items/content-items.controller.js';
-import { validateBody, validateQuery } from '../../middleware/validation.js';
-import { authenticate } from '../../middleware/auth.js';
-import { requireOrgContext } from '../../middleware/orgContext.js';
+import * as projectsController from './projects.controller';
+import * as planItemsController from '../plan-items/plan-items.controller';
+import * as contentItemsController from '../content-items/content-items.controller';
+import * as activityReporterController from '../activity-reporter/activity-reporter.controller';
+import { validateBody, validateQuery } from '../../middleware/validation';
+import { authenticate } from '../../middleware/auth';
+import { requireOrgContext } from '../../middleware/orgContext';
 import {
   createProjectSchema,
   updateProjectSchema,
   listProjectsQuerySchema,
-} from './projects.schema.js';
+} from './projects.schema';
 import {
   createPlanItemSchema,
   listPlanItemsQuerySchema,
-} from '../plan-items/plan-items.schema.js';
+} from '../plan-items/plan-items.schema';
 import {
   listContentItemsQuerySchema,
-} from '../content-items/content-items.schema.js';
+} from '../content-items/content-items.schema';
+import {
+  generateReportSchema,
+  listReportsQuerySchema,
+} from '../activity-reporter/activity-reporter.schema';
 
 // Configure multer for CSV upload (memory storage, 5MB limit)
 const upload = multer({
@@ -128,6 +133,36 @@ router.get(
   '/:projectId/content',
   validateQuery(listContentItemsQuerySchema),
   contentItemsController.getProjectContent
+);
+
+// ============================================================================
+// Nested Activity Report Routes (under project)
+// ============================================================================
+
+// POST /api/projects/:projectId/activity-report - Generate a new activity report
+router.post(
+  '/:projectId/activity-report',
+  validateBody(generateReportSchema),
+  activityReporterController.generateReport
+);
+
+// GET /api/projects/:projectId/activity-reports - List activity reports
+router.get(
+  '/:projectId/activity-reports',
+  validateQuery(listReportsQuerySchema),
+  activityReporterController.listReports
+);
+
+// GET /api/projects/:projectId/activity-reports/:reportId - Get single report
+router.get(
+  '/:projectId/activity-reports/:reportId',
+  activityReporterController.getReport
+);
+
+// GET /api/projects/:projectId/activity-reports/:reportId/sources - Get report sources
+router.get(
+  '/:projectId/activity-reports/:reportId/sources',
+  activityReporterController.getReportSources
 );
 
 export default router;

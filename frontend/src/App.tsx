@@ -24,6 +24,9 @@ import { PlanPage } from '@/pages/plan/PlanPage';
 // Intake Pages
 import { IntakePage } from '@/pages/intake/IntakePage';
 
+// Reporter Pages
+import { ReporterPage } from '@/pages/reporter/ReporterPage';
+
 // Admin Pages
 import { OrganizationPage } from '@/pages/admin/OrganizationPage';
 import { RolesPage } from '@/pages/admin/RolesPage';
@@ -66,6 +69,9 @@ function App() {
 
         {/* Intake Page */}
         <Route path="/intake" element={<IntakePage />} />
+
+        {/* Reporter Page */}
+        <Route path="/reporter" element={<ReporterPage />} />
 
         {/* Sample Pages */}
         <Route path="/reports" element={<ReportsPage />} />

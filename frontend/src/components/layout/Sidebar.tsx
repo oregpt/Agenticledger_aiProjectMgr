@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   ListTree,
   Inbox,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermissionsStore } from '@/stores/permissionsStore';
@@ -30,6 +31,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ShieldCheck,
   ListTree,
   Inbox,
+  ClipboardList,
 };
 
 export function Sidebar() {

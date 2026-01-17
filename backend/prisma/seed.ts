@@ -99,7 +99,7 @@ async function main() {
     { name: 'Dashboard', slug: 'dashboard', path: '/dashboard', icon: 'LayoutDashboard', section: MenuSection.MAIN, sortOrder: 1 },
     { name: 'Plan', slug: 'plan', path: '/plan', icon: 'ListTree', section: MenuSection.MAIN, sortOrder: 2 },
     { name: 'Intake', slug: 'intake', path: '/intake', icon: 'Inbox', section: MenuSection.MAIN, sortOrder: 3 },
-    { name: 'Reports', slug: 'reports', path: '/reports', icon: 'FileText', section: MenuSection.MAIN, sortOrder: 4 },
+    { name: 'Activity Reporter', slug: 'reports', path: '/reporter', icon: 'ClipboardList', section: MenuSection.MAIN, sortOrder: 4 },
     { name: 'Data Export', slug: 'data_export', path: '/data-export', icon: 'Download', section: MenuSection.MAIN, sortOrder: 5 },
     { name: 'Settings', slug: 'settings', path: '/settings', icon: 'Settings', section: MenuSection.MAIN, sortOrder: 6 },
     { name: 'Audit Log', slug: 'audit_log', path: '/audit-log', icon: 'History', section: MenuSection.MAIN, sortOrder: 7 },
