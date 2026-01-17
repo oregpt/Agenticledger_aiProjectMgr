@@ -187,8 +187,8 @@
         "Chunk content and generate embeddings on save"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Full AI analysis workflow implemented with analyze and saveAnalyzed endpoints. Frontend shows AI suggestions panel with Accept/Edit/Store Raw options."
     },
     {
       "id": "US-009",

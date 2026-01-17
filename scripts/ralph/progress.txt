@@ -225,3 +225,88 @@ Multi-tenant AI-powered project management and status reporting tool.
   - File type validation should check both MIME type and extension (for .md files)
   - Form reset after successful submission improves UX for repeated entries
 ---
+
+## 2026-01-17 - US-007
+- Set up OpenAI integration and pgvector for RAG functionality
+- Installed openai package in backend
+- Created AI configuration and services:
+  - backend/src/config/ai.ts - OpenAI configuration (model, embedding model, chunking settings)
+  - backend/src/services/ai/openai.service.ts - Client initialization and helper functions:
+    - getOpenAIClient() - Singleton OpenAI client
+    - isOpenAIConfigured() - Check if API key is set
+    - generateCompletion() - Chat completions
+    - generateJsonCompletion() - JSON-formatted responses
+    - generateEmbedding() / generateEmbeddings() - Text embeddings
+  - backend/src/services/ai/embedding.service.ts - Text chunking and vector search:
+    - chunkText() - Split text into ~500-1000 token chunks with overlap
+    - estimateTokenCount() - Approximate token counting
+    - createContentChunks() - Create chunks and store embeddings
+    - searchSimilarChunks() - General similarity search with filters
+    - searchProjectChunks() - Project-scoped search with date filters
+    - deleteContentChunks() - Remove chunks for a content item
+- Enabled pgvector extension in PostgreSQL via migration
+- Added ContentChunk model with vector(1536) embedding column (Unsupported type for Prisma)
+- Created IVFFlat index for cosine similarity search
+- Added environment variables to .env.example:
+  - OPENAI_API_KEY, OPENAI_MODEL, OPENAI_EMBEDDING_MODEL
+  - CHUNK_SIZE, CHUNK_OVERLAP, RAG_TOP_K, RAG_SIMILARITY_THRESHOLD
+- Created stub analyze.service.ts for US-008 to allow server to start
+- Fixed .js import extensions in content-items module
+- **Files changed:**
+  - backend/package.json (added openai)
+  - backend/.env.example (added OpenAI and RAG settings)
+  - backend/prisma/schema.prisma (added ContentChunk model)
+  - backend/prisma/migrations/20260117004331_add_content_chunks_pgvector/
+  - backend/src/config/ai.ts (new)
+  - backend/src/services/ai/openai.service.ts (new)
+  - backend/src/services/ai/embedding.service.ts (new)
+  - backend/src/modules/content-items/analyze.service.ts (stub)
+  - backend/src/modules/content-items/*.ts (fixed .js imports)
+- **Learnings:**
+  - Prisma doesn't natively support pgvector - use Unsupported("vector(1536)") type
+  - Embedding storage/update requires raw SQL: `$executeRawUnsafe` with ::vector cast
+  - Similarity search uses cosine distance <=> operator: 1 - distance = similarity
+  - IVFFlat index enables efficient approximate nearest neighbor search
+  - Text chunking with sentence boundaries preserves context better than fixed splits
+  - Token estimation: ~4 characters per token for English text
+  - Pre-existing TypeScript errors in starter code don't affect tsx watch runtime
+---
+
+## 2026-01-17 - US-008
+- Implemented complete Intake Agent AI analysis workflow
+- Created backend analysis services:
+  - analyze.service.ts - AI content analysis with OpenAI JSON mode
+  - prompts/intake-agent.ts - System and user prompt templates
+- Backend endpoints:
+  - POST /api/content-items/analyze - Analyzes content and returns suggestions
+  - POST /api/content-items/save-analyzed - Saves content with AI suggestions and extracted items
+- Analysis features:
+  - Detects content types (meeting, document, email, note, transcript)
+  - Detects activity types (status_update, action_item, risk, decision, blocker)
+  - Suggests plan item links based on content
+  - Extracts action items, risks, decisions with owner/due date
+  - Returns confidence levels (high/medium/low) for all suggestions
+- Frontend IntakePage updated with:
+  - Two-view system: 'form' view and 'analysis' view
+  - "Analyze with AI" button triggers analysis
+  - AI suggestions panel showing suggested content/activity types, plan items, tags
+  - Extracted items list with checkboxes for selective saving
+  - "Accept & Save", "Edit", "Store Raw Only" action buttons
+- Validation ensures only valid IDs from context are returned in suggestions
+- Parent-child linking via parentItemId for extracted items
+- **Files changed:**
+  - backend/src/modules/content-items/analyze.service.ts (full implementation)
+  - backend/src/modules/content-items/content-items.schema.ts (added analyze schemas)
+  - backend/src/modules/content-items/content-items.controller.ts (added analyze handlers)
+  - backend/src/modules/content-items/content-items.routes.ts (added analyze routes)
+  - backend/src/services/ai/prompts/intake-agent.ts (new)
+  - frontend/src/api/content-items.api.ts (added analyze types and functions)
+  - frontend/src/pages/intake/IntakePage.tsx (added AI analysis workflow)
+- **Learnings:**
+  - OpenAI JSON mode (response_format: { type: 'json_object' }) ensures valid JSON responses
+  - Prompt should explicitly list valid IDs from context to prevent AI hallucination
+  - Filter AI suggestions against actual database IDs before returning to frontend
+  - Two-view pattern (form vs results) simplifies complex multi-step UI flows
+  - Checkbox-based item selection works well for "accept some" workflows
+  - Parent-child content item relationships enable lineage tracking
+---
