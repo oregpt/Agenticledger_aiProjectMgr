@@ -277,6 +277,69 @@ AI Project Manager is a multi-tenant SaaS application that helps consultants man
 
 ---
 
+### D8: API Key Management
+
+**Purpose:** Programmatic API access for integrations and automation
+
+**Features:**
+- API key CRUD operations
+- Secure key generation (`aipm_<base64url>` format)
+- bcrypt hashing (only prefix stored, full key shown once on creation)
+- Organization-scoped keys with full user-level access
+- Expiration date support
+- Key revocation (soft delete)
+- Last used tracking
+- API keys cannot manage other API keys (security restriction)
+
+**API Endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/api-keys | List organization's API keys |
+| GET | /api/api-keys/:id | Get single API key details |
+| POST | /api/api-keys | Create new API key (returns full key once) |
+| DELETE | /api/api-keys/:id | Revoke API key |
+
+**Authentication:**
+- Use header: `X-API-Key: aipm_your_key_here`
+- API key auth takes precedence over JWT when both present
+- Full user-level access (below org admin)
+- Cannot access: API key management endpoints, organization settings
+
+**Key Files:**
+- `backend/src/modules/api-keys/api-keys.controller.ts`
+- `backend/src/modules/api-keys/api-keys.service.ts`
+- `backend/src/modules/api-keys/api-keys.routes.ts`
+- `backend/src/middleware/apiKeyAuth.ts`
+- `frontend/src/api/api-keys.api.ts`
+- `frontend/src/pages/admin/ConfigPage.tsx` (API Keys tab)
+
+---
+
+### D9: API Documentation (Swagger)
+
+**Purpose:** Interactive API documentation for developers
+
+**Features:**
+- OpenAPI 3.0 specification
+- Interactive Swagger UI
+- Try-it-out functionality
+- Both JWT and API Key auth support
+- Organized by domain/tag
+
+**Access Points:**
+
+| URL | Description |
+|-----|-------------|
+| /api/docs | Swagger UI (interactive) |
+| /api/docs.json | OpenAPI JSON spec |
+
+**Key Files:**
+- `backend/src/config/swagger.ts`
+- Route documentation via JSDoc comments in `*.routes.ts` files
+
+---
+
 ## Domain Relationships
 
 ```
@@ -374,6 +437,8 @@ npm run dev
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:5000
 - Health Check: http://localhost:5000/health
+- **Swagger UI**: http://localhost:5000/api/docs
+- **OpenAPI Spec**: http://localhost:5000/api/docs.json
 
 ---
 
@@ -418,8 +483,15 @@ After running `npx prisma db seed`:
 | /plan | Plan Agent | View and manage project plan hierarchy |
 | /intake | Intake Agent | Submit content for AI analysis |
 | /reporter | Activity Reporter | Generate AI-powered activity reports |
-| /admin/config | Admin Config | Manage projects and type configurations |
+| /admin/config | Admin Config | Manage projects, type configurations, and API keys |
 | /settings | Settings | User preferences |
+
+**Admin Config Tabs:**
+- Projects: Manage organization projects
+- Plan Item Types: Configure plan hierarchy levels
+- Content Types: Configure content classification
+- Activity Types: Configure activity classification
+- API Keys: Manage API keys for programmatic access
 
 ---
 
@@ -446,11 +518,14 @@ All API responses follow this format:
 ## Security
 
 - JWT-based authentication with access and refresh tokens
+- **API Key authentication** for programmatic access (X-API-Key header)
 - Organization-based data isolation (multi-tenancy)
 - Role-based access control (RBAC)
 - Rate limiting on authentication endpoints
 - Input validation with Zod schemas
 - SQL injection protection via Prisma ORM
+- API keys use bcrypt hashing (only prefix/hash stored)
+- API keys restricted from sensitive operations (cannot manage other keys)
 
 ---
 

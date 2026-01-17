@@ -1,14 +1,42 @@
 # AI Project Manager - Release Checklist
 
 **Status:** Complete
-**Completion Date:** 2026-01-17
-**Version:** 1.0.0
+**Last Updated:** 2026-01-17
+**Version:** 1.1.0
+
+---
+
+## v1.1.0 Release Notes (2026-01-17)
+
+### New Features
+
+**API Key Management (D8)**
+- Create, list, and revoke API keys for programmatic access
+- Secure key generation with bcrypt hashing (prefix only stored)
+- Organization-scoped keys with user-level permissions
+- API keys cannot manage other API keys (security restriction)
+- Expiration date support
+- Last used tracking
+- New Admin UI tab: "API Keys"
+
+**Swagger/OpenAPI Documentation (D9)**
+- Interactive Swagger UI at `/api/docs`
+- OpenAPI 3.0 specification at `/api/docs.json`
+- Documents all API endpoints with examples
+- Supports both JWT and API Key authentication
+- "API Documentation" button in Admin header
+
+**Authentication**
+- New `X-API-Key` header authentication method
+- API key auth takes precedence over JWT when both present
+- Full user-level access (projects, content, reports)
+- Restricted from sensitive operations (org settings, API key management)
 
 ---
 
 ## Features Implemented
 
-### User Stories (16 Completed)
+### User Stories (20 Completed)
 
 | ID | Feature | Status |
 |----|---------|--------|
@@ -28,6 +56,10 @@
 | US-013 | Create main app layout with 4 agent tabs | Passed |
 | US-014 | Add file upload support for PDF and DOCX | Passed |
 | US-015 | Polish UI with design system colors and typography | Passed |
+| US-016 | API Key CRUD endpoints with secure storage | Passed |
+| US-017 | API Key authentication middleware | Passed |
+| US-018 | Swagger/OpenAPI documentation | Passed |
+| US-019 | API Keys management UI and Swagger link | Passed |
 
 ### Release Items
 
@@ -43,7 +75,7 @@
 
 ## Domains Documented
 
-The platform consists of 7 distinct domains:
+The platform consists of 9 distinct domains:
 
 | Domain | Description | Key Endpoints |
 |--------|-------------|---------------|
@@ -54,6 +86,8 @@ The platform consists of 7 distinct domains:
 | D5: Activity Reporter | Report generation, RAG-based | /api/projects/:id/activity-reports |
 | D6: Output Formatter | Markdown/PPTX export | /api/format/markdown, /api/format/pptx |
 | D7: Configuration | Type management, system config | /api/config/* |
+| D8: API Key Management | Programmatic API access | /api/api-keys |
+| D9: API Documentation | Interactive Swagger UI | /api/docs, /api/docs.json |
 
 Full documentation in: `platform-overview.md`
 
@@ -134,6 +168,8 @@ npx tsx comprehensive-test-suite/runTests.ts d1
 | System Type Protection | Admin | ✅ Pass | Workstream, Milestone, Activity, Task, Subtask |
 | Content Types Tab | Admin | ✅ Pass | Tab navigation works |
 | Activity Types Tab | Admin | ✅ Pass | Tab navigation works |
+| API Keys Tab | Admin | ✅ Pass | Create, list, revoke API keys |
+| API Documentation Button | Admin | ✅ Pass | Opens /api/docs in new tab |
 | Sub-tab Navigation | All | ✅ Pass | Tabs switch correctly |
 
 ### Test Session Screenshots (Claude-in-Chrome)
@@ -188,7 +224,7 @@ All test suite issues have been resolved:
    - Add integration tests for full workflows
 
 2. **Documentation**
-   - Add OpenAPI/Swagger specification
+   - ~~Add OpenAPI/Swagger specification~~ ✅ Completed (US-018)
    - Create user guide for each agent
    - Add deployment documentation
 

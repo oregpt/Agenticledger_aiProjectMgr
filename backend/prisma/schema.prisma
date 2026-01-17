@@ -43,6 +43,7 @@ model Organization {
   planItemTypes       PlanItemType[]
   contentTypes        ContentType[]
   activityItemTypes   ActivityItemType[]
+  apiKeys             ApiKey[]
 
   @@index([slug])
   @@index([isActive])
@@ -249,6 +250,7 @@ model User {
   refreshTokens       RefreshToken[]
   invitationsSent     Invitation[]       @relation("InvitationSender")
   contentItems        ContentItem[]
+  apiKeysCreated      ApiKey[]
 
   @@index([email])
   @@index([isActive])
@@ -534,6 +536,46 @@ model RefreshToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+// ============================================================================
+// API KEYS (Tenant-scoped API access)
+// ============================================================================
+
+model ApiKey {
+  id              String    @id @default(uuid())
+  organizationId  Int
+
+  // Human-readable name for the key
+  name            String
+
+  // Security: Only store hash, never the raw key
+  keyHash         String    // bcrypt hash of the full key
+  keyPrefix       String    // First 8 chars for display (e.g., "aipm_abc1")
+
+  // Who created this key
+  createdByUserId Int
+
+  // Usage tracking
+  lastUsedAt      DateTime?
+
+  // Optional expiration
+  expiresAt       DateTime?
+
+  // Soft delete / revocation
+  isActive        Boolean   @default(true)
+  revokedAt       DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy       User         @relation(fields: [createdByUserId], references: [id])
+
+  @@index([organizationId])
+  @@index([keyPrefix])
+  @@index([isActive])
 }
 
 // ============================================================================

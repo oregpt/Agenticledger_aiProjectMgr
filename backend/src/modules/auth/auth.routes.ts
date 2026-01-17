@@ -15,7 +15,40 @@ import {
 
 const router = Router();
 
-// Public routes
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - firstName
+ *               - lastName
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Validation error or email already exists
+ */
 router.post(
   '/register',
   authLimiter,
@@ -23,6 +56,52 @@ router.post(
   authController.register
 );
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login with email and password
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "orgadmin@acme.local"
+ *               password:
+ *                 type: string
+ *                 example: "orgadmin123"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
+ *                     refreshToken:
+ *                       type: string
+ *                     expiresIn:
+ *                       type: integer
+ *       401:
+ *         description: Invalid credentials
+ */
 router.post(
   '/login',
   authLimiter,
@@ -71,6 +150,47 @@ router.post(
   authController.changePassword
 );
 
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Get current user's profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user's profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     uuid:
+ *                       type: string
+ *                       format: uuid
+ *                     email:
+ *                       type: string
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     organizations:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *       401:
+ *         description: Unauthorized
+ */
 router.get(
   '/me',
   authenticate,

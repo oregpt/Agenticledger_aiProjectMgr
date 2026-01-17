@@ -1,9 +1,11 @@
 import express from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import config from './config/index.js';
 import logger from './utils/logger.js';
+import { swaggerSpec } from './config/swagger.js';
 
 // Import routes
 import authRoutes from './modules/auth/auth.routes.js';
@@ -21,6 +23,7 @@ import planItemTypesRoutes from './modules/plan-items/plan-item-types.routes.js'
 import contentItemsRoutes from './modules/content-items/content-items.routes.js';
 import outputFormatterRoutes from './modules/output-formatter/output-formatter.routes.js';
 import configRoutes from './modules/config/config.routes.js';
+import apiKeysRoutes from './modules/api-keys/api-keys.routes.js';
 
 const app = express();
 
@@ -32,7 +35,7 @@ app.use(cors({
   origin: config.isDev ? '*' : config.frontendUrl,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Organization-Id'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Organization-Id', 'X-API-Key'],
 }));
 
 // Body parsing
@@ -74,6 +77,19 @@ app.use('/api/plan-item-types', planItemTypesRoutes);
 app.use('/api/content-items', contentItemsRoutes);
 app.use('/api/format', outputFormatterRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/api-keys', apiKeysRoutes);
+
+// Raw OpenAPI spec (JSON) - must be before swagger-ui middleware
+app.get('/api/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// Swagger API Documentation UI
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'AI Project Manager API Docs',
+}));
 
 // 404 handler
 app.use(notFoundHandler);

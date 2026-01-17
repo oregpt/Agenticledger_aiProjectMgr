@@ -13,6 +13,48 @@ export const requireOrgContext = async (
       return;
     }
 
+    // If org context already set (e.g., by API key auth), skip header check
+    // but still load role/permissions for the user
+    if (req.organizationId && req.organization && req.authMethod === 'api_key') {
+      // For API key auth, we need to load the user's role in this org
+      const membership = await prisma.organizationUser.findUnique({
+        where: {
+          userId_organizationId: {
+            userId: req.user.id,
+            organizationId: req.organizationId,
+          },
+        },
+        include: {
+          role: {
+            include: {
+              permissions: {
+                include: {
+                  menu: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (membership && membership.isActive) {
+        req.role = membership.role;
+        // Build permissions map
+        const permissionsMap = new Map<string, { canCreate: boolean; canRead: boolean; canUpdate: boolean; canDelete: boolean }>();
+        for (const perm of membership.role.permissions) {
+          permissionsMap.set(perm.menu.slug, {
+            canCreate: perm.canCreate,
+            canRead: perm.canRead,
+            canUpdate: perm.canUpdate,
+            canDelete: perm.canDelete,
+          });
+        }
+        req.permissions = permissionsMap;
+      }
+      next();
+      return;
+    }
+
     // Get organization ID from header or query
     const orgIdHeader = req.headers['x-organization-id'];
     const orgIdQuery = req.query.organizationId;

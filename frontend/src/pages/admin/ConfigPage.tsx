@@ -16,6 +16,10 @@ import {
   Activity,
   Lock,
   Loader2,
+  Key,
+  Copy,
+  Check,
+  BookOpen,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,20 +65,34 @@ import {
   type CreateContentTypeInput,
   type CreateActivityTypeInput,
 } from '@/api/config.api';
+import {
+  apiKeysApi,
+  type ApiKey,
+  type CreateApiKeyResponse,
+} from '@/api/api-keys.api';
 
 export function ConfigPage() {
   const [activeTab, setActiveTab] = useState('projects');
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Settings className="h-8 w-8" />
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Configuration</h1>
-          <p className="text-muted-foreground">
-            Manage projects and system configuration types.
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Settings className="h-8 w-8" />
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Admin Configuration</h1>
+            <p className="text-muted-foreground">
+              Manage projects and system configuration types.
+            </p>
+          </div>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => window.open('/api/docs', '_blank')}
+        >
+          <BookOpen className="mr-2 h-4 w-4" />
+          API Documentation
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -95,6 +113,10 @@ export function ConfigPage() {
             <Activity className="h-4 w-4" />
             Activity Types
           </TabsTrigger>
+          <TabsTrigger value="api-keys" className="flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            API Keys
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="projects">
@@ -111,6 +133,10 @@ export function ConfigPage() {
 
         <TabsContent value="activity-types">
           <ActivityTypesTab />
+        </TabsContent>
+
+        <TabsContent value="api-keys">
+          <ApiKeysTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -794,6 +820,304 @@ function ActivityTypesTab() {
         </AlertDialogContent>
       </AlertDialog>
     </Card>
+  );
+}
+
+// ============ API Keys Tab ============
+
+function ApiKeysTab() {
+  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [createdKey, setCreatedKey] = useState<CreateApiKeyResponse | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const fetchKeys = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await apiKeysApi.list();
+      setKeys(data);
+    } catch (error) {
+      console.error('Failed to fetch API keys:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchKeys();
+  }, [fetchKeys]);
+
+  const handleCreate = () => {
+    setCreatedKey(null);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = (key: ApiKey) => {
+    setKeyToDelete(key);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!keyToDelete) return;
+    try {
+      await apiKeysApi.revoke(keyToDelete.id);
+      setDeleteDialogOpen(false);
+      setKeyToDelete(null);
+      fetchKeys();
+    } catch (error) {
+      console.error('Failed to revoke API key:', error);
+    }
+  };
+
+  const handleCopyKey = async (key: string) => {
+    await navigator.clipboard.writeText(key);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleKeyCreated = (newKey: CreateApiKeyResponse) => {
+    setCreatedKey(newKey);
+    fetchKeys();
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString();
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>API Keys</CardTitle>
+            <CardDescription>
+              Manage API keys for programmatic access. Keys provide full user-level access.
+            </CardDescription>
+          </div>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create API Key
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Key Prefix</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Last Used</TableHead>
+                <TableHead>Expires</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {keys.map((key) => (
+                <TableRow key={key.id}>
+                  <TableCell className="font-medium">{key.name}</TableCell>
+                  <TableCell>
+                    <code className="text-sm bg-muted px-2 py-1 rounded">{key.keyPrefix}</code>
+                  </TableCell>
+                  <TableCell>{formatDate(key.createdAt)}</TableCell>
+                  <TableCell>{formatDate(key.lastUsedAt)}</TableCell>
+                  <TableCell>{key.expiresAt ? formatDate(key.expiresAt) : 'Never'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(key)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {keys.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No API keys found. Create one to get started.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+
+      {/* Create API Key Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) setCreatedKey(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {createdKey ? 'API Key Created' : 'Create API Key'}
+            </DialogTitle>
+            <DialogDescription>
+              {createdKey
+                ? 'Copy your API key now. It will not be shown again!'
+                : 'Create a new API key for programmatic access.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {createdKey ? (
+            <div className="space-y-4 py-4">
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+                <div className="flex items-center gap-2 text-amber-800 mb-2">
+                  <Key className="h-4 w-4" />
+                  <span className="font-medium">Save this key now!</span>
+                </div>
+                <p className="text-sm text-amber-700">
+                  This is the only time you will see the full API key. Store it securely.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>API Key</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-3 bg-muted rounded text-sm break-all">
+                    {createdKey.key}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleCopyKey(createdKey.key)}
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <Label className="text-muted-foreground">Name</Label>
+                  <p>{createdKey.name}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Expires</Label>
+                  <p>{createdKey.expiresAt ? formatDate(createdKey.expiresAt) : 'Never'}</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <CreateApiKeyForm
+              onCreated={handleKeyCreated}
+              onCancel={() => setDialogOpen(false)}
+            />
+          )}
+
+          {createdKey && (
+            <DialogFooter>
+              <Button onClick={() => setDialogOpen(false)}>Done</Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke API Key</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to revoke "{keyToDelete?.name}"? This action cannot be
+              undone and any applications using this key will stop working.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>Revoke</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
+  );
+}
+
+interface CreateApiKeyFormProps {
+  onCreated: (key: CreateApiKeyResponse) => void;
+  onCancel: () => void;
+}
+
+function CreateApiKeyForm({ onCreated, onCancel }: CreateApiKeyFormProps) {
+  const [name, setName] = useState('');
+  const [expiresAt, setExpiresAt] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!name.trim()) return;
+
+    setSaving(true);
+    setError('');
+    try {
+      const result = await apiKeysApi.create({
+        name: name.trim(),
+        expiresAt: expiresAt || undefined,
+      });
+      onCreated(result);
+    } catch (err) {
+      setError('Failed to create API key. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4 py-4">
+      <div className="space-y-2">
+        <Label htmlFor="key-name">Name *</Label>
+        <Input
+          id="key-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Production API Key"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="key-expires">Expiration Date (optional)</Label>
+        <Input
+          id="key-expires"
+          type="datetime-local"
+          value={expiresAt}
+          onChange={(e) => setExpiresAt(e.target.value)}
+        />
+        <p className="text-sm text-muted-foreground">
+          Leave empty for a key that never expires.
+        </p>
+      </div>
+
+      {error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
+
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={!name.trim() || saving}>
+          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Create Key
+        </Button>
+      </DialogFooter>
+    </div>
   );
 }
 
