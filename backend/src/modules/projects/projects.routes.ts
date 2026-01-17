@@ -48,7 +48,59 @@ const router = Router();
 router.use(authenticate);
 router.use(requireOrgContext);
 
-// GET /api/projects - List all projects for the organization
+/**
+ * @swagger
+ * /projects:
+ *   get:
+ *     summary: List all projects
+ *     description: Get all projects for the current organization with pagination
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by project name
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, completed, on_hold, cancelled]
+ *         description: Filter by status
+ *     responses:
+ *       200:
+ *         description: List of projects
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Project'
+ *       401:
+ *         description: Unauthorized
+ */
 router.get(
   '/',
   validateQuery(listProjectsQuerySchema),
@@ -59,39 +111,210 @@ router.get(
 // Type Lookups (must be before :id routes to avoid routing conflicts)
 // ============================================================================
 
-// GET /api/projects/lookup/content-types - Get all content types
+/**
+ * @swagger
+ * /projects/lookup/content-types:
+ *   get:
+ *     summary: Get all content types
+ *     description: Retrieve available content types for classifying content items
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     responses:
+ *       200:
+ *         description: List of content types
+ */
 router.get(
   '/lookup/content-types',
   contentItemsController.getContentTypes
 );
 
-// GET /api/projects/lookup/activity-item-types - Get all activity item types
+/**
+ * @swagger
+ * /projects/lookup/activity-item-types:
+ *   get:
+ *     summary: Get all activity item types
+ *     description: Retrieve available activity item types (action items, blockers, decisions, etc.)
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     responses:
+ *       200:
+ *         description: List of activity item types
+ */
 router.get(
   '/lookup/activity-item-types',
   contentItemsController.getActivityItemTypes
 );
 
-// GET /api/projects/:id - Get a single project
+/**
+ * @swagger
+ * /projects/{id}:
+ *   get:
+ *     summary: Get a project by ID
+ *     description: Retrieve a single project with its details
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project UUID
+ *     responses:
+ *       200:
+ *         description: Project details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
+ *       404:
+ *         description: Project not found
+ */
 router.get(
   '/:id',
   projectsController.getProject
 );
 
-// POST /api/projects - Create a new project
+/**
+ * @swagger
+ * /projects:
+ *   post:
+ *     summary: Create a new project
+ *     description: Create a new project in the organization
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - startDate
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Q1 Marketing Campaign"
+ *               client:
+ *                 type: string
+ *                 example: "Acme Corp"
+ *               description:
+ *                 type: string
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-01-15"
+ *               targetEndDate:
+ *                 type: string
+ *                 format: date
+ *               status:
+ *                 type: string
+ *                 enum: [active, completed, on_hold, cancelled]
+ *                 default: active
+ *     responses:
+ *       201:
+ *         description: Project created
+ *       400:
+ *         description: Validation error
+ */
 router.post(
   '/',
   validateBody(createProjectSchema),
   projectsController.createProject
 );
 
-// PUT /api/projects/:id - Update a project
+/**
+ * @swagger
+ * /projects/{id}:
+ *   put:
+ *     summary: Update a project
+ *     description: Update an existing project's details
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               client:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *               targetEndDate:
+ *                 type: string
+ *                 format: date
+ *               status:
+ *                 type: string
+ *                 enum: [active, completed, on_hold, cancelled]
+ *     responses:
+ *       200:
+ *         description: Project updated
+ *       404:
+ *         description: Project not found
+ */
 router.put(
   '/:id',
   validateBody(updateProjectSchema),
   projectsController.updateProject
 );
 
-// DELETE /api/projects/:id - Soft delete a project
+/**
+ * @swagger
+ * /projects/{id}:
+ *   delete:
+ *     summary: Delete a project
+ *     description: Soft delete a project (sets isActive to false)
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project UUID
+ *     responses:
+ *       200:
+ *         description: Project deleted
+ *       404:
+ *         description: Project not found
+ */
 router.delete(
   '/:id',
   projectsController.deleteProject
@@ -101,7 +324,28 @@ router.delete(
 // Dashboard Routes (under project)
 // ============================================================================
 
-// GET /api/projects/:projectId/dashboard - Get project dashboard with statistics
+/**
+ * @swagger
+ * /projects/{projectId}/dashboard:
+ *   get:
+ *     summary: Get project dashboard
+ *     description: Retrieve project statistics and overview for dashboard display
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project UUID
+ *     responses:
+ *       200:
+ *         description: Dashboard data with statistics
+ */
 router.get(
   '/:projectId/dashboard',
   projectsController.getProjectDashboard
@@ -111,28 +355,173 @@ router.get(
 // Nested Plan Routes (under project)
 // ============================================================================
 
-// GET /api/projects/:projectId/plan - Get full plan tree for project
+/**
+ * @swagger
+ * /projects/{projectId}/plan:
+ *   get:
+ *     summary: Get project plan tree
+ *     description: Retrieve the full hierarchical plan tree for a project
+ *     tags: [Plan Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project UUID
+ *       - in: query
+ *         name: includeCompleted
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: Include completed items
+ *     responses:
+ *       200:
+ *         description: Hierarchical plan tree
+ */
 router.get(
   '/:projectId/plan',
   validateQuery(listPlanItemsQuerySchema),
   planItemsController.getProjectPlan
 );
 
-// POST /api/projects/:projectId/plan - Create a new plan item in project
+/**
+ * @swagger
+ * /projects/{projectId}/plan:
+ *   post:
+ *     summary: Create a plan item
+ *     description: Create a new plan item (workstream, milestone, activity, task, or subtask)
+ *     tags: [Plan Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - planItemTypeId
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Backend Development"
+ *               description:
+ *                 type: string
+ *               planItemTypeId:
+ *                 type: integer
+ *                 description: Plan item type ID (workstream, milestone, etc.)
+ *               parentId:
+ *                 type: string
+ *                 description: Parent plan item UUID for nesting
+ *               status:
+ *                 type: string
+ *                 enum: [not_started, in_progress, completed, blocked]
+ *                 default: not_started
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *               sortOrder:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Plan item created
+ *       400:
+ *         description: Validation error
+ */
 router.post(
   '/:projectId/plan',
   validateBody(createPlanItemSchema),
   planItemsController.createPlanItem
 );
 
-// POST /api/projects/:projectId/plan/import/preview - Preview CSV import
+/**
+ * @swagger
+ * /projects/{projectId}/plan/import/preview:
+ *   post:
+ *     summary: Preview CSV import
+ *     description: Preview plan items from a CSV file before importing
+ *     tags: [Plan Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: CSV file to preview
+ *     responses:
+ *       200:
+ *         description: Preview of items to be imported
+ */
 router.post(
   '/:projectId/plan/import/preview',
   upload.single('file'),
   planItemsController.previewCsvImport
 );
 
-// POST /api/projects/:projectId/plan/import - Import plan items from CSV
+/**
+ * @swagger
+ * /projects/{projectId}/plan/import:
+ *   post:
+ *     summary: Import plan items from CSV
+ *     description: Bulk import plan items from a CSV file
+ *     tags: [Plan Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: CSV file to import
+ *     responses:
+ *       200:
+ *         description: Import results
+ */
 router.post(
   '/:projectId/plan/import',
   upload.single('file'),
@@ -143,7 +532,43 @@ router.post(
 // Nested Content Routes (under project)
 // ============================================================================
 
-// GET /api/projects/:projectId/content - List content items for project
+/**
+ * @swagger
+ * /projects/{projectId}/content:
+ *   get:
+ *     summary: List project content items
+ *     description: Retrieve content items (meetings, notes, transcripts) for a project
+ *     tags: [Content Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Project UUID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: contentTypeId
+ *         schema:
+ *           type: integer
+ *         description: Filter by content type
+ *     responses:
+ *       200:
+ *         description: List of content items
+ */
 router.get(
   '/:projectId/content',
   validateQuery(listContentItemsQuerySchema),
@@ -154,27 +579,152 @@ router.get(
 // Nested Activity Report Routes (under project)
 // ============================================================================
 
-// POST /api/projects/:projectId/activity-report - Generate a new activity report
+/**
+ * @swagger
+ * /projects/{projectId}/activity-report:
+ *   post:
+ *     summary: Generate activity report
+ *     description: Generate an AI-powered activity report for a date range using RAG
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - startDate
+ *               - endDate
+ *             properties:
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-01-01"
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-01-15"
+ *               focusAreas:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Optional focus areas for the report
+ *     responses:
+ *       201:
+ *         description: Report generated
+ */
 router.post(
   '/:projectId/activity-report',
   validateBody(generateReportSchema),
   activityReporterController.generateReport
 );
 
-// GET /api/projects/:projectId/activity-reports - List activity reports
+/**
+ * @swagger
+ * /projects/{projectId}/activity-reports:
+ *   get:
+ *     summary: List activity reports
+ *     description: Get all activity reports for a project
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: List of activity reports
+ */
 router.get(
   '/:projectId/activity-reports',
   validateQuery(listReportsQuerySchema),
   activityReporterController.listReports
 );
 
-// GET /api/projects/:projectId/activity-reports/:reportId - Get single report
+/**
+ * @swagger
+ * /projects/{projectId}/activity-reports/{reportId}:
+ *   get:
+ *     summary: Get activity report
+ *     description: Retrieve a single activity report with its content
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Activity report details
+ *       404:
+ *         description: Report not found
+ */
 router.get(
   '/:projectId/activity-reports/:reportId',
   activityReporterController.getReport
 );
 
-// GET /api/projects/:projectId/activity-reports/:reportId/sources - Get report sources
+/**
+ * @swagger
+ * /projects/{projectId}/activity-reports/{reportId}/sources:
+ *   get:
+ *     summary: Get report sources
+ *     description: Get the content items that were used as sources for the report
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of source content items
+ */
 router.get(
   '/:projectId/activity-reports/:reportId/sources',
   activityReporterController.getReportSources
@@ -184,14 +734,87 @@ router.get(
 // Nested Plan Updater Routes (under project)
 // ============================================================================
 
-// POST /api/projects/:projectId/plan-suggestions - Get AI plan update suggestions
+/**
+ * @swagger
+ * /projects/{projectId}/plan-suggestions:
+ *   post:
+ *     summary: Get AI plan suggestions
+ *     description: Get AI-generated suggestions for updating the project plan based on recent content
+ *     tags: [Plan Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               contentItemIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Specific content items to analyze (optional)
+ *     responses:
+ *       200:
+ *         description: List of suggested plan updates
+ */
 router.post(
   '/:projectId/plan-suggestions',
   validateBody(getPlanSuggestionsSchema),
   planUpdaterController.getPlanSuggestions
 );
 
-// POST /api/projects/:projectId/plan-updates - Apply selected plan updates
+/**
+ * @swagger
+ * /projects/{projectId}/plan-updates:
+ *   post:
+ *     summary: Apply plan updates
+ *     description: Apply selected plan update suggestions to the project plan
+ *     tags: [Plan Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - updates
+ *             properties:
+ *               updates:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     planItemId:
+ *                       type: string
+ *                     action:
+ *                       type: string
+ *                       enum: [update_status, add_note, create_item]
+ *                     data:
+ *                       type: object
+ *     responses:
+ *       200:
+ *         description: Updates applied successfully
+ */
 router.post(
   '/:projectId/plan-updates',
   validateBody(applyPlanUpdatesSchema),

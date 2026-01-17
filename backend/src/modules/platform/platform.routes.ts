@@ -17,7 +17,23 @@ const router = Router();
 // Platform Settings
 // ============================================================================
 
-// Get all platform settings
+/**
+ * @swagger
+ * /platform/settings:
+ *   get:
+ *     summary: Get all platform settings
+ *     description: Get all platform-wide settings (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     responses:
+ *       200:
+ *         description: List of platform settings
+ *       403:
+ *         description: Platform admin access required
+ */
 router.get(
   '/settings',
   authenticate,
@@ -26,7 +42,31 @@ router.get(
   platformSettingsController.getAllSettings
 );
 
-// Get specific setting
+/**
+ * @swagger
+ * /platform/settings/{key}:
+ *   get:
+ *     summary: Get platform setting
+ *     description: Get a specific platform setting by key (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Setting key
+ *     responses:
+ *       200:
+ *         description: Setting value
+ *       403:
+ *         description: Platform admin access required
+ *       404:
+ *         description: Setting not found
+ */
 router.get(
   '/settings/:key',
   authenticate,
@@ -35,7 +75,40 @@ router.get(
   platformSettingsController.getSetting
 );
 
-// Update setting
+/**
+ * @swagger
+ * /platform/settings/{key}:
+ *   put:
+ *     summary: Update platform setting
+ *     description: Update a platform setting value (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Setting key
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - value
+ *             properties:
+ *               value:
+ *                 description: New setting value
+ *     responses:
+ *       200:
+ *         description: Setting updated
+ *       403:
+ *         description: Platform admin access required
+ */
 router.put(
   '/settings/:key',
   authenticate,
@@ -48,7 +121,23 @@ router.put(
 // Platform Feature Flags
 // ============================================================================
 
-// Get all feature flags (platform level)
+/**
+ * @swagger
+ * /platform/feature-flags:
+ *   get:
+ *     summary: Get all feature flags
+ *     description: Get all feature flags at the platform level (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     responses:
+ *       200:
+ *         description: List of feature flags
+ *       403:
+ *         description: Platform admin access required
+ */
 router.get(
   '/feature-flags',
   authenticate,
@@ -57,7 +146,39 @@ router.get(
   featureFlagsController.getAllFeatureFlags
 );
 
-// Update feature flag default
+/**
+ * @swagger
+ * /platform/feature-flags/{flagId}:
+ *   put:
+ *     summary: Update feature flag default
+ *     description: Update the default value of a feature flag (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: flagId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Feature flag ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               defaultEnabled:
+ *                 type: boolean
+ *                 description: Default enabled state for new organizations
+ *     responses:
+ *       200:
+ *         description: Feature flag updated
+ *       403:
+ *         description: Platform admin access required
+ */
 router.put(
   '/feature-flags/:flagId',
   authenticate,
@@ -70,7 +191,38 @@ router.put(
 // Platform Organizations
 // ============================================================================
 
-// Get all organizations (platform admin)
+/**
+ * @swagger
+ * /platform/organizations:
+ *   get:
+ *     summary: Get all organizations
+ *     description: Get all organizations on the platform (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by organization name
+ *     responses:
+ *       200:
+ *         description: Paginated list of organizations
+ *       403:
+ *         description: Platform admin access required
+ */
 router.get(
   '/organizations',
   authenticate,
@@ -80,7 +232,38 @@ router.get(
   organizationsController.getAllOrganizations
 );
 
-// Create organization
+/**
+ * @swagger
+ * /platform/organizations:
+ *   post:
+ *     summary: Create organization
+ *     description: Create a new organization (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Organization created
+ *       403:
+ *         description: Platform admin access required
+ */
 router.post(
   '/organizations',
   authenticate,
@@ -90,7 +273,31 @@ router.post(
   organizationsController.createOrganization
 );
 
-// Delete organization
+/**
+ * @swagger
+ * /platform/organizations/{orgId}:
+ *   delete:
+ *     summary: Delete organization
+ *     description: Delete an organization (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: orgId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Organization ID to delete
+ *     responses:
+ *       200:
+ *         description: Organization deleted
+ *       403:
+ *         description: Platform admin access required
+ *       404:
+ *         description: Organization not found
+ */
 router.delete(
   '/organizations/:orgId',
   authenticate,
@@ -103,7 +310,36 @@ router.delete(
 // Platform Stats
 // ============================================================================
 
-// Get platform statistics
+/**
+ * @swagger
+ * /platform/stats:
+ *   get:
+ *     summary: Get platform statistics
+ *     description: Get platform-wide statistics (platform admin only)
+ *     tags: [Platform]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     responses:
+ *       200:
+ *         description: Platform statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalOrganizations:
+ *                   type: integer
+ *                 totalUsers:
+ *                   type: integer
+ *                 activeUsersToday:
+ *                   type: integer
+ *                 invitationsPending:
+ *                   type: integer
+ *       403:
+ *         description: Platform admin access required
+ */
 router.get(
   '/stats',
   authenticate,

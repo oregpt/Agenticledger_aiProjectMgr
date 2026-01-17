@@ -13,14 +13,73 @@ const router = Router();
 router.use(authenticate);
 
 /**
- * POST /api/format/markdown
- * Format data as Markdown
+ * @swagger
+ * /format/markdown:
+ *   post:
+ *     summary: Format as Markdown
+ *     description: Convert activity report or content to Markdown format
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reportId
+ *             properties:
+ *               reportId:
+ *                 type: string
+ *                 description: Activity report UUID to format
+ *               template:
+ *                 type: string
+ *                 description: Optional template name
+ *     responses:
+ *       200:
+ *         description: Markdown content
+ *         content:
+ *           text/markdown:
+ *             schema:
+ *               type: string
  */
 router.post('/markdown', outputFormatterController.formatMarkdown);
 
 /**
- * POST /api/format/pptx
- * Format data as PowerPoint
+ * @swagger
+ * /format/pptx:
+ *   post:
+ *     summary: Format as PowerPoint
+ *     description: Convert activity report to PowerPoint presentation
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reportId
+ *             properties:
+ *               reportId:
+ *                 type: string
+ *                 description: Activity report UUID to format
+ *               template:
+ *                 type: string
+ *                 description: Optional template name
+ *     responses:
+ *       200:
+ *         description: PowerPoint file
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.presentationml.presentation:
+ *             schema:
+ *               type: string
+ *               format: binary
  */
 router.post('/pptx', outputFormatterController.formatPptx);
 
