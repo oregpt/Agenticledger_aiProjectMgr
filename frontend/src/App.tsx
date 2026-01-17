@@ -21,6 +21,9 @@ import { AuditLogPage } from '@/pages/sample/AuditLogPage';
 // Plan Pages
 import { PlanPage } from '@/pages/plan/PlanPage';
 
+// Intake Pages
+import { IntakePage } from '@/pages/intake/IntakePage';
+
 // Admin Pages
 import { OrganizationPage } from '@/pages/admin/OrganizationPage';
 import { RolesPage } from '@/pages/admin/RolesPage';
@@ -60,6 +63,9 @@ function App() {
 
         {/* Plan Page */}
         <Route path="/plan" element={<PlanPage />} />
+
+        {/* Intake Page */}
+        <Route path="/intake" element={<IntakePage />} />
 
         {/* Sample Pages */}
         <Route path="/reports" element={<ReportsPage />} />

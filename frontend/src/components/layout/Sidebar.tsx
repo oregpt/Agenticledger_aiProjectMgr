@@ -11,6 +11,7 @@ import {
   Building,
   ShieldCheck,
   ListTree,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermissionsStore } from '@/stores/permissionsStore';
@@ -28,6 +29,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Buildings: Building, // lucide uses 'Building' not 'Buildings'
   ShieldCheck,
   ListTree,
+  Inbox,
 };
 
 export function Sidebar() {
