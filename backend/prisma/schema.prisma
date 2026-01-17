@@ -41,6 +41,8 @@ model Organization {
   invitations         Invitation[]
   projects            Project[]
   planItemTypes       PlanItemType[]
+  contentTypes        ContentType[]
+  activityItemTypes   ActivityItemType[]
 
   @@index([slug])
   @@index([isActive])
@@ -77,6 +79,7 @@ model Project {
   // Relations
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   planItems       PlanItem[]
+  contentItems    ContentItem[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -244,6 +247,7 @@ model User {
   organizations       OrganizationUser[]
   refreshTokens       RefreshToken[]
   invitationsSent     Invitation[]       @relation("InvitationSender")
+  contentItems        ContentItem[]
 
   @@index([email])
   @@index([isActive])
@@ -562,4 +566,129 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([organizationId])
   @@index([createdAt])
+}
+
+// ============================================================================
+// CONTENT TYPES (Configurable types for content items)
+// ============================================================================
+
+model ContentType {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(uuid())
+
+  // Nullable for global/system types, set for org-specific
+  organizationId Int?
+
+  name           String
+  slug           String
+  description    String?
+
+  // UI properties
+  icon           String?
+  color          String?
+
+  // System types cannot be deleted or modified by org admins
+  isSystem       Boolean      @default(false)
+  isActive       Boolean      @default(true)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([slug, organizationId])
+  @@index([isActive])
+}
+
+// ============================================================================
+// ACTIVITY ITEM TYPES (Configurable types for activity items)
+// ============================================================================
+
+model ActivityItemType {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(uuid())
+
+  // Nullable for global/system types, set for org-specific
+  organizationId Int?
+
+  name           String
+  slug           String
+  description    String?
+
+  // UI properties
+  icon           String?
+  color          String?
+
+  // System types cannot be deleted or modified by org admins
+  isSystem       Boolean      @default(false)
+  isActive       Boolean      @default(true)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([slug, organizationId])
+  @@index([isActive])
+}
+
+// ============================================================================
+// CONTENT ITEMS (Documents, meeting notes, emails, etc.)
+// ============================================================================
+
+model ContentItem {
+  id              String    @id @default(uuid())
+  projectId       String
+
+  // Plan linkage (multi-select) - array of PlanItem UUIDs
+  planItemIds     String[]  @default([])
+
+  // Classification (multi-select) - arrays of type IDs
+  contentTypeIds  Int[]     @default([])
+  activityTypeIds Int[]     @default([])
+
+  // Source info
+  sourceType      String    // file, text, calendar, transcript, email
+  title           String
+
+  // Timing - crucial for activity reporting
+  dateOccurred    DateTime  @db.Date
+  projectWeek     Int?      // Calculated from project.startDate
+  tags            String[]  @default([])
+
+  // Raw content storage
+  rawContent      String?   @db.Text
+  fileReference   String?   // Path if source was file
+  fileName        String?
+  fileSize        Int?
+  mimeType        String?
+
+  // AI processing results
+  aiSummary             String?   @db.Text
+  aiExtractedEntities   Json      @default("{}")
+  processingStatus      String    @default("pending")  // pending, processing, completed, failed
+
+  // Lineage - for AI-split items
+  parentItemId    String?
+  createdBy       String    @default("user")  // user, ai_split
+  createdByUserId Int?
+
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent          ContentItem?   @relation("ContentItemSplit", fields: [parentItemId], references: [id])
+  children        ContentItem[]  @relation("ContentItemSplit")
+  user            User?     @relation(fields: [createdByUserId], references: [id])
+
+  @@index([projectId])
+  @@index([dateOccurred])
+  @@index([projectWeek])
+  @@index([processingStatus])
+  @@index([isActive])
 }

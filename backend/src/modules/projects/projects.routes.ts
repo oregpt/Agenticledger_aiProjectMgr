@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import * as projectsController from './projects.controller.js';
 import * as planItemsController from '../plan-items/plan-items.controller.js';
+import * as contentItemsController from '../content-items/content-items.controller.js';
 import { validateBody, validateQuery } from '../../middleware/validation.js';
 import { authenticate } from '../../middleware/auth.js';
 import { requireOrgContext } from '../../middleware/orgContext.js';
@@ -14,6 +15,9 @@ import {
   createPlanItemSchema,
   listPlanItemsQuerySchema,
 } from '../plan-items/plan-items.schema.js';
+import {
+  listContentItemsQuerySchema,
+} from '../content-items/content-items.schema.js';
 
 // Configure multer for CSV upload (memory storage, 5MB limit)
 const upload = multer({
@@ -39,6 +43,22 @@ router.get(
   '/',
   validateQuery(listProjectsQuerySchema),
   projectsController.listProjects
+);
+
+// ============================================================================
+// Type Lookups (must be before :id routes to avoid routing conflicts)
+// ============================================================================
+
+// GET /api/projects/lookup/content-types - Get all content types
+router.get(
+  '/lookup/content-types',
+  contentItemsController.getContentTypes
+);
+
+// GET /api/projects/lookup/activity-item-types - Get all activity item types
+router.get(
+  '/lookup/activity-item-types',
+  contentItemsController.getActivityItemTypes
 );
 
 // GET /api/projects/:id - Get a single project
@@ -97,6 +117,17 @@ router.post(
   '/:projectId/plan/import',
   upload.single('file'),
   planItemsController.importPlanItems
+);
+
+// ============================================================================
+// Nested Content Routes (under project)
+// ============================================================================
+
+// GET /api/projects/:projectId/content - List content items for project
+router.get(
+  '/:projectId/content',
+  validateQuery(listContentItemsQuerySchema),
+  contentItemsController.getProjectContent
 );
 
 export default router;

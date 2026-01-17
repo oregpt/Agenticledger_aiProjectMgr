@@ -98,10 +98,11 @@ async function main() {
     // Main Section
     { name: 'Dashboard', slug: 'dashboard', path: '/dashboard', icon: 'LayoutDashboard', section: MenuSection.MAIN, sortOrder: 1 },
     { name: 'Plan', slug: 'plan', path: '/plan', icon: 'ListTree', section: MenuSection.MAIN, sortOrder: 2 },
-    { name: 'Reports', slug: 'reports', path: '/reports', icon: 'FileText', section: MenuSection.MAIN, sortOrder: 3 },
-    { name: 'Data Export', slug: 'data_export', path: '/data-export', icon: 'Download', section: MenuSection.MAIN, sortOrder: 4 },
-    { name: 'Settings', slug: 'settings', path: '/settings', icon: 'Settings', section: MenuSection.MAIN, sortOrder: 5 },
-    { name: 'Audit Log', slug: 'audit_log', path: '/audit-log', icon: 'History', section: MenuSection.MAIN, sortOrder: 6 },
+    { name: 'Intake', slug: 'intake', path: '/intake', icon: 'Inbox', section: MenuSection.MAIN, sortOrder: 3 },
+    { name: 'Reports', slug: 'reports', path: '/reports', icon: 'FileText', section: MenuSection.MAIN, sortOrder: 4 },
+    { name: 'Data Export', slug: 'data_export', path: '/data-export', icon: 'Download', section: MenuSection.MAIN, sortOrder: 5 },
+    { name: 'Settings', slug: 'settings', path: '/settings', icon: 'Settings', section: MenuSection.MAIN, sortOrder: 6 },
+    { name: 'Audit Log', slug: 'audit_log', path: '/audit-log', icon: 'History', section: MenuSection.MAIN, sortOrder: 7 },
 
     // Admin Section
     { name: 'Organization', slug: 'admin_organization', path: '/admin/organization', icon: 'Building2', section: MenuSection.ADMIN, sortOrder: 1 },
@@ -135,12 +136,14 @@ async function main() {
     viewer: {
       dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: false, r: true, u: false, d: false },
+      intake: { c: false, r: true, u: false, d: false },
       reports: { c: false, r: true, u: false, d: false },
       settings: { c: false, r: true, u: false, d: false },
     },
     standard_user: {
       dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: true, r: true, u: true, d: false },
+      intake: { c: true, r: true, u: true, d: false },
       reports: { c: true, r: true, u: true, d: true },
       data_export: { c: false, r: true, u: false, d: false },
       settings: { c: false, r: true, u: true, d: false },
@@ -149,6 +152,7 @@ async function main() {
     advanced_user: {
       dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: true, r: true, u: true, d: true },
+      intake: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
       data_export: { c: false, r: true, u: true, d: false },
       settings: { c: false, r: true, u: true, d: false },
@@ -157,6 +161,7 @@ async function main() {
     org_admin: {
       dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: true, r: true, u: true, d: true },
+      intake: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
       data_export: { c: true, r: true, u: true, d: true },
       settings: { c: true, r: true, u: true, d: true },
@@ -167,6 +172,7 @@ async function main() {
     platform_admin: {
       dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: true, r: true, u: true, d: true },
+      intake: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
       data_export: { c: true, r: true, u: true, d: true },
       settings: { c: true, r: true, u: true, d: true },
@@ -371,6 +377,64 @@ async function main() {
       console.log(`Created plan item type: ${type.name} (Level ${type.level})`);
     } else {
       console.log(`Plan item type already exists: ${type.name}`);
+    }
+  }
+
+  // ============================================================================
+  // 10. Create Default ContentTypes (Global - no organizationId)
+  // ============================================================================
+  console.log('Creating default content types...');
+
+  const contentTypes = [
+    { name: 'Meeting', slug: 'meeting', description: 'Meeting notes, transcripts, summaries', icon: 'Users', color: '#3b82f6', isSystem: true },
+    { name: 'Document', slug: 'document', description: 'Documents, specs, proposals', icon: 'FileText', color: '#10b981', isSystem: true },
+    { name: 'Email', slug: 'email', description: 'Email threads and correspondence', icon: 'Mail', color: '#8b5cf6', isSystem: true },
+    { name: 'Note', slug: 'note', description: 'Quick notes and updates', icon: 'StickyNote', color: '#f59e0b', isSystem: true },
+    { name: 'Transcript', slug: 'transcript', description: 'Call or meeting transcripts', icon: 'FileAudio', color: '#ec4899', isSystem: true },
+  ];
+
+  for (const type of contentTypes) {
+    const existing = await prisma.contentType.findFirst({
+      where: { slug: type.slug, organizationId: null },
+    });
+
+    if (!existing) {
+      await prisma.contentType.create({
+        data: type,
+      });
+      console.log(`Created content type: ${type.name}`);
+    } else {
+      console.log(`Content type already exists: ${type.name}`);
+    }
+  }
+
+  // ============================================================================
+  // 11. Create Default ActivityItemTypes (Global - no organizationId)
+  // ============================================================================
+  console.log('Creating default activity item types...');
+
+  const activityItemTypes = [
+    { name: 'Status Update', slug: 'status_update', description: 'Progress or state change', icon: 'RefreshCw', color: '#3b82f6', isSystem: true },
+    { name: 'Action Item', slug: 'action_item', description: 'Task to be completed', icon: 'CheckCircle', color: '#10b981', isSystem: true },
+    { name: 'Risk', slug: 'risk', description: 'Potential issue identified', icon: 'AlertTriangle', color: '#f59e0b', isSystem: true },
+    { name: 'Decision', slug: 'decision', description: 'A decision that was made', icon: 'GitBranch', color: '#8b5cf6', isSystem: true },
+    { name: 'Blocker', slug: 'blocker', description: 'Something blocking progress', icon: 'XCircle', color: '#ef4444', isSystem: true },
+    { name: 'Milestone Update', slug: 'milestone_update', description: 'Progress toward milestone', icon: 'Flag', color: '#06b6d4', isSystem: true },
+    { name: 'Dependency', slug: 'dependency', description: 'External dependency noted', icon: 'Link', color: '#6b7280', isSystem: true },
+  ];
+
+  for (const type of activityItemTypes) {
+    const existing = await prisma.activityItemType.findFirst({
+      where: { slug: type.slug, organizationId: null },
+    });
+
+    if (!existing) {
+      await prisma.activityItemType.create({
+        data: type,
+      });
+      console.log(`Created activity item type: ${type.name}`);
+    } else {
+      console.log(`Activity item type already exists: ${type.name}`);
     }
   }
 
