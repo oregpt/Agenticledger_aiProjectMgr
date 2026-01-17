@@ -536,3 +536,39 @@ Multi-tenant AI-powered project management and status reporting tool.
   - Blue color scheme from SPEC.md (primary-600, primary-700) provides professional look
   - useLocation().pathname enables dynamic active tab detection
 ---
+
+## 2026-01-17 - US-014
+- Added file upload support for PDF and DOCX documents
+- Installed pdf-parse (v2.x) and mammoth packages
+- Created file-processing services at backend/src/services/file-processing/:
+  - pdf.service.ts - Extract text using PDFParse class (pdf-parse 2.x API)
+  - docx.service.ts - Extract text using mammoth.extractRawText()
+  - index.ts - Main processing service with file storage management
+- Created multer middleware at backend/src/middleware/upload.ts:
+  - Memory storage for direct buffer access
+  - File type validation: PDF, DOCX, DOC, TXT, MD
+  - 10MB file size limit
+- Added POST /api/content-items/upload endpoint:
+  - Accepts multipart/form-data with file field
+  - Parses form fields: projectId, title, dateOccurred, planItemIds, contentTypeIds, activityTypeIds, tags
+  - Extracts text from file and stores in rawContent
+  - Saves file to uploads/ with UUID-based filename
+  - Stores original filename, size, mimeType in content item
+- Created uploads/ directory with .gitkeep
+- Updated .gitignore to exclude uploaded files but keep directory
+- **Files changed:**
+  - backend/package.json (added pdf-parse, mammoth, @types/pdf-parse)
+  - backend/src/services/file-processing/* (new - 3 files)
+  - backend/src/middleware/upload.ts (new)
+  - backend/src/modules/content-items/content-items.controller.ts (added uploadFile handler)
+  - backend/src/modules/content-items/content-items.routes.ts (added /upload route)
+  - backend/.gitignore (added uploads/* exclusion)
+  - backend/uploads/.gitkeep (new)
+- **Learnings:**
+  - pdf-parse 2.x has class-based API: new PDFParse({ data }) then getText()/getInfo()
+  - mammoth.extractRawText() returns { value: string } for plain text extraction
+  - multer.memoryStorage() allows processing file buffer directly without temp files
+  - JSON.parse() needed for array form fields in multipart/form-data
+  - InfoResult from pdf-parse needs double type cast for safe metadata access
+  - .gitkeep pattern with "uploads/*" and "!uploads/.gitkeep" tracks empty directory
+---

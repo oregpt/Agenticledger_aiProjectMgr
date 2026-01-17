@@ -321,8 +321,8 @@
         "Test with sample PDF and DOCX files"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "File upload endpoint at POST /api/content-items/upload. Uses pdf-parse 2.x (class-based API) and mammoth. Files stored with UUID names in uploads/ directory."
     },
     {
       "id": "US-015",
