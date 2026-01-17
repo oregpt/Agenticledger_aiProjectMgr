@@ -12,6 +12,7 @@ import {
   Clock,
   ExternalLink,
   FileCode,
+  Presentation,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ import type {
   Blocker,
   SourceContentItem,
 } from '@/api/activity-reporter.api';
+import { outputFormatterApi } from '@/api/output-formatter.api';
 
 type PeriodPreset = 'this_week' | 'last_week' | 'last_2_weeks' | 'custom';
 
@@ -75,6 +77,10 @@ export function ReporterPage() {
   const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
   const [selectedSources, setSelectedSources] = useState<SourceContentItem[]>([]);
   const [loadingSources, setLoadingSources] = useState(false);
+
+  // Export states
+  const [isExportingMarkdown, setIsExportingMarkdown] = useState(false);
+  const [isExportingPptx, setIsExportingPptx] = useState(false);
 
   // Update dates when preset changes
   useEffect(() => {
@@ -150,65 +156,55 @@ export function ReporterPage() {
     }
   };
 
-  const exportToMarkdown = () => {
-    if (!report) return;
+  const exportToMarkdown = async () => {
+    if (!report || !currentProject) return;
 
-    const data = report.reportData;
-    let markdown = `# ${report.title}\n\n`;
-    markdown += `**Period:** ${report.periodStart} to ${report.periodEnd}\n\n`;
-    markdown += `## Summary\n\n${data.summary}\n\n`;
-
-    if (data.statusUpdates.length > 0) {
-      markdown += `## Status Updates\n\n`;
-      data.statusUpdates.forEach(su => {
-        markdown += `- **${su.planItemName || 'General'}**: ${su.update} (${su.status})\n`;
+    setIsExportingMarkdown(true);
+    try {
+      const response = await outputFormatterApi.formatAsMarkdown({
+        sourceType: 'activity_report',
+        projectName: currentProject.name,
+        data: {
+          title: report.title,
+          periodStart: report.periodStart,
+          periodEnd: report.periodEnd,
+          reportData: report.reportData,
+        },
       });
-      markdown += '\n';
-    }
 
-    if (data.actionItems.length > 0) {
-      markdown += `## Action Items\n\n`;
-      data.actionItems.forEach(ai => {
-        markdown += `- [ ] **${ai.title}**: ${ai.description}`;
-        if (ai.owner) markdown += ` (Owner: ${ai.owner})`;
-        if (ai.dueDate) markdown += ` - Due: ${ai.dueDate}`;
-        markdown += '\n';
+      if (response.success && response.data) {
+        outputFormatterApi.downloadMarkdown(response.data.content, response.data.filename);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export Markdown');
+    } finally {
+      setIsExportingMarkdown(false);
+    }
+  };
+
+  const exportToPptx = async () => {
+    if (!report || !currentProject) return;
+
+    setIsExportingPptx(true);
+    try {
+      const blob = await outputFormatterApi.formatAsPptx({
+        sourceType: 'activity_report',
+        projectName: currentProject.name,
+        data: {
+          title: report.title,
+          periodStart: report.periodStart,
+          periodEnd: report.periodEnd,
+          reportData: report.reportData,
+        },
       });
-      markdown += '\n';
-    }
 
-    if (data.risks.length > 0) {
-      markdown += `## Risks\n\n`;
-      data.risks.forEach(r => {
-        markdown += `- **${r.title}** (${r.severity} severity): ${r.description}\n`;
-      });
-      markdown += '\n';
+      const filename = `${currentProject.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-activity-report-${report.periodStart}-${report.periodEnd}.pptx`;
+      outputFormatterApi.downloadPptx(blob, filename);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export PowerPoint');
+    } finally {
+      setIsExportingPptx(false);
     }
-
-    if (data.decisions.length > 0) {
-      markdown += `## Decisions\n\n`;
-      data.decisions.forEach(d => {
-        markdown += `- **${d.title}**: ${d.description}\n`;
-      });
-      markdown += '\n';
-    }
-
-    if (data.blockers.length > 0) {
-      markdown += `## Blockers\n\n`;
-      data.blockers.forEach(b => {
-        markdown += `- **${b.title}**: ${b.description}\n`;
-      });
-      markdown += '\n';
-    }
-
-    // Download
-    const blob = new Blob([markdown], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `activity-report-${report.periodStart}-${report.periodEnd}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   if (!currentProject) {
@@ -235,9 +231,21 @@ export function ReporterPage() {
         </div>
         {report && (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={exportToMarkdown}>
-              <Download className="mr-2 h-4 w-4" />
+            <Button variant="outline" onClick={exportToMarkdown} disabled={isExportingMarkdown}>
+              {isExportingMarkdown ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
               Export Markdown
+            </Button>
+            <Button variant="outline" onClick={exportToPptx} disabled={isExportingPptx}>
+              {isExportingPptx ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Presentation className="mr-2 h-4 w-4" />
+              )}
+              Export PowerPoint
             </Button>
           </div>
         )}
