@@ -100,7 +100,27 @@ export const useProjectStore = create<ProjectState>()(
         try {
           const response = await projectsApi.list({ limit: 100 });
           if (response.success && response.data) {
-            set({ projects: response.data, projectsLoading: false });
+            const projects = response.data;
+            set({ projects, projectsLoading: false });
+
+            // Auto-select first project if none selected and projects exist
+            const { currentProject } = get();
+            if (!currentProject && projects.length > 0) {
+              // Check if we have a persisted project ID that matches
+              const persistedId = currentProject?.id;
+              const matchingProject = persistedId
+                ? projects.find(p => p.id === persistedId)
+                : null;
+
+              // Select matching project or first project
+              get().setCurrentProject(matchingProject || projects[0]);
+            } else if (currentProject && projects.length > 0) {
+              // Rehydrate full project data if we only have ID from persistence
+              const fullProject = projects.find(p => p.id === currentProject.id);
+              if (fullProject && !currentProject.name) {
+                get().setCurrentProject(fullProject);
+              }
+            }
           } else {
             set({ projectsError: response.error?.message || 'Failed to fetch projects', projectsLoading: false });
           }
