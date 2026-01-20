@@ -32,8 +32,16 @@ const app = express();
 app.set('trust proxy', 1);
 
 // CORS configuration
+// Ensure frontend URL has protocol prefix
+let corsOrigin: string | boolean = '*';
+if (!config.isDev && config.frontendUrl) {
+  corsOrigin = config.frontendUrl.startsWith('http')
+    ? config.frontendUrl
+    : `https://${config.frontendUrl}`;
+}
+
 app.use(cors({
-  origin: config.isDev ? '*' : config.frontendUrl,
+  origin: corsOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Organization-Id', 'X-API-Key'],
