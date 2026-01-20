@@ -67,7 +67,7 @@ export const saveAnalyzedContentSchema = z.object({
   title: z.string().min(1).max(500),
   dateOccurred: z.coerce.date(),
   rawContent: z.string(),
-  sourceType: z.enum([...sourceTypes, 'ai_extracted']),
+  sourceType: z.enum([...sourceTypes, 'ai_extracted']).default('text'),
   contentTypeIds: z.array(z.coerce.number().int().positive()).default([]),
   activityTypeIds: z.array(z.coerce.number().int().positive()).default([]),
   planItemIds: z.array(z.string().uuid()).default([]),

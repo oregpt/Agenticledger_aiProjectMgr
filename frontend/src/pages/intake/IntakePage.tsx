@@ -16,8 +16,35 @@ import contentItemsApi, {
   type SaveAnalyzedContentInput,
 } from '@/api/content-items.api';
 import type { PlanItem } from '@/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Pencil, Wand2 } from 'lucide-react';
 
 type ViewMode = 'form' | 'analysis';
+
+// Source tracking for visual distinction
+type ItemSource = 'ai' | 'ai_modified' | 'user_added';
+
+// Editable extracted item with source tracking
+interface EditableExtractedItem {
+  id: string; // unique ID for tracking
+  type: string;
+  title: string;
+  description: string;
+  owner?: string;
+  dueDate?: string;
+  status?: string;
+  relatedPlanItemIds?: string[];
+  confidence: 'high' | 'medium' | 'low';
+  source: ItemSource;
+  selected: boolean;
+}
 
 export function IntakePage() {
   const { currentProject, planItems, planItemsLoading, fetchPlanItems } = useProjectStore();
@@ -45,7 +72,7 @@ export function IntakePage() {
   // Analysis state
   const [viewMode, setViewMode] = useState<ViewMode>('form');
   const [analysisResult, setAnalysisResult] = useState<AnalyzeContentResponse | null>(null);
-  const [selectedExtractedItems, setSelectedExtractedItems] = useState<Set<number>>(new Set());
+  const [editableExtractedItems, setEditableExtractedItems] = useState<EditableExtractedItem[]>([]);
 
   // Load plan items when project changes
   useEffect(() => {
@@ -233,8 +260,21 @@ export function IntakePage() {
 
       if (response.success && response.data) {
         setAnalysisResult(response.data);
-        // Auto-select all extracted items
-        setSelectedExtractedItems(new Set(response.data.analysis.extractedItems.map((_, i) => i)));
+        // Initialize editable extracted items from AI results
+        const editableItems: EditableExtractedItem[] = response.data.analysis.extractedItems.map((item, index) => ({
+          id: `ai-${index}-${Date.now()}`,
+          type: item.type,
+          title: item.title,
+          description: item.description,
+          owner: item.owner,
+          dueDate: item.dueDate,
+          status: item.status,
+          relatedPlanItemIds: item.relatedPlanItemIds,
+          confidence: item.confidence,
+          source: 'ai' as ItemSource,
+          selected: true, // Auto-select all AI items
+        }));
+        setEditableExtractedItems(editableItems);
         setViewMode('analysis');
       } else {
         setError(response.error?.message || 'Analysis failed');
@@ -272,9 +312,9 @@ export function IntakePage() {
       const finalTags = new Set(tags);
       analysis.tags.forEach(t => finalTags.add(t));
 
-      // Get selected extracted items
-      const extractedItems = analysis.extractedItems
-        .filter((_, i) => selectedExtractedItems.has(i))
+      // Get selected extracted items from editable state (includes user modifications and additions)
+      const extractedItems = editableExtractedItems
+        .filter(item => item.selected)
         .map(item => ({
           type: item.type,
           title: item.title,
@@ -283,7 +323,7 @@ export function IntakePage() {
           dueDate: item.dueDate,
           status: item.status,
           relatedPlanItemIds: item.relatedPlanItemIds,
-          metadata: item.metadata,
+          metadata: { source: item.source }, // Track source in metadata
         }));
 
       const input: SaveAnalyzedContentInput = {
@@ -394,20 +434,50 @@ export function IntakePage() {
     setFile(null);
     setViewMode('form');
     setAnalysisResult(null);
-    setSelectedExtractedItems(new Set());
+    setEditableExtractedItems([]);
   };
 
   // Toggle extracted item selection
-  const toggleExtractedItem = (index: number) => {
-    setSelectedExtractedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
+  const toggleExtractedItem = (id: string) => {
+    setEditableExtractedItems(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, selected: !item.selected } : item
+      )
+    );
+  };
+
+  // Update an extracted item field (marks as modified if AI-sourced)
+  const updateExtractedItem = (id: string, field: keyof EditableExtractedItem, value: string | string[] | undefined) => {
+    setEditableExtractedItems(prev =>
+      prev.map(item => {
+        if (item.id !== id) return item;
+        const updated = { ...item, [field]: value };
+        // Mark as modified if it was originally from AI
+        if (item.source === 'ai') {
+          updated.source = 'ai_modified';
+        }
+        return updated;
+      })
+    );
+  };
+
+  // Add a new user-created extracted item
+  const addExtractedItem = () => {
+    const newItem: EditableExtractedItem = {
+      id: `user-${Date.now()}`,
+      type: 'action_item', // Default type
+      title: '',
+      description: '',
+      confidence: 'high', // User items are high confidence
+      source: 'user_added',
+      selected: true,
+    };
+    setEditableExtractedItems(prev => [...prev, newItem]);
+  };
+
+  // Remove an extracted item
+  const removeExtractedItem = (id: string) => {
+    setEditableExtractedItems(prev => prev.filter(item => item.id !== id));
   };
 
   // Get confidence badge color
@@ -433,6 +503,33 @@ export function IntakePage() {
         return <X className="h-4 w-4 text-red-500" />;
       default:
         return <Tag className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  // Get source badge for visual distinction
+  const getSourceBadge = (source: ItemSource) => {
+    switch (source) {
+      case 'ai':
+        return (
+          <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+            <Wand2 className="h-3 w-3 mr-1" />
+            AI Suggested
+          </Badge>
+        );
+      case 'ai_modified':
+        return (
+          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+            <Pencil className="h-3 w-3 mr-1" />
+            Modified
+          </Badge>
+        );
+      case 'user_added':
+        return (
+          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+            <Plus className="h-3 w-3 mr-1" />
+            User Added
+          </Badge>
+        );
     }
   };
 
@@ -593,57 +690,130 @@ export function IntakePage() {
           {/* Extracted Items */}
           <Card>
             <CardHeader>
-              <CardTitle>Extracted Items</CardTitle>
-              <CardDescription>
-                {analysis.extractedItems.length} items extracted from content
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Extracted Items</CardTitle>
+                  <CardDescription>
+                    {editableExtractedItems.length} items - edit or add your own
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={addExtractedItem}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Item
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              {analysis.extractedItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No specific items extracted</p>
+              {editableExtractedItems.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground mb-3">No items extracted</p>
+                  <Button variant="outline" size="sm" onClick={addExtractedItem}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Item Manually
+                  </Button>
+                </div>
               ) : (
-                <div className="space-y-3">
-                  {analysis.extractedItems.map((item, index) => (
-                    <label
-                      key={index}
-                      className={`block p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedExtractedItems.has(index)
+                <div className="space-y-4">
+                  {editableExtractedItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`p-4 rounded-lg border transition-colors ${
+                        item.selected
                           ? 'border-primary bg-primary/5'
-                          : 'border-slate-200 hover:border-slate-300'
+                          : 'border-slate-200 bg-slate-50/50'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
+                      {/* Header row with checkbox, type dropdown, and badges */}
+                      <div className="flex items-center gap-3 mb-3">
                         <Checkbox
-                          checked={selectedExtractedItems.has(index)}
-                          onCheckedChange={() => toggleExtractedItem(index)}
-                          className="mt-1"
+                          checked={item.selected}
+                          onCheckedChange={() => toggleExtractedItem(item.id)}
                         />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            {getActivityTypeIcon(item.type)}
-                            <span className="font-medium text-sm">{item.title}</span>
-                            {getConfidenceBadge(item.confidence)}
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {item.description}
-                          </p>
-                          {(item.owner || item.dueDate) && (
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                              {item.owner && (
-                                <span className="flex items-center gap-1">
-                                  <User className="h-3 w-3" /> {item.owner}
-                                </span>
-                              )}
-                              {item.dueDate && (
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" /> {item.dueDate}
-                                </span>
-                              )}
+                        <Select
+                          value={item.type}
+                          onValueChange={(value) => updateExtractedItem(item.id, 'type', value)}
+                        >
+                          <SelectTrigger className="w-[180px] h-8">
+                            <div className="flex items-center gap-2">
+                              {getActivityTypeIcon(item.type)}
+                              <SelectValue />
                             </div>
-                          )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            {activityItemTypes.map(type => (
+                              <SelectItem key={type.id} value={type.slug}>
+                                <div className="flex items-center gap-2">
+                                  {getActivityTypeIcon(type.slug)}
+                                  {type.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex-1" />
+                        {getSourceBadge(item.source)}
+                        {item.source !== 'ai' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => removeExtractedItem(item.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Editable title */}
+                      <div className="space-y-1 mb-3">
+                        <Label className="text-xs text-muted-foreground">Title</Label>
+                        <Input
+                          value={item.title}
+                          onChange={(e) => updateExtractedItem(item.id, 'title', e.target.value)}
+                          placeholder="Enter item title..."
+                          className="h-8"
+                        />
+                      </div>
+
+                      {/* Editable description */}
+                      <div className="space-y-1 mb-3">
+                        <Label className="text-xs text-muted-foreground">Description</Label>
+                        <Textarea
+                          value={item.description}
+                          onChange={(e) => updateExtractedItem(item.id, 'description', e.target.value)}
+                          placeholder="Enter description..."
+                          className="min-h-[60px] text-sm"
+                        />
+                      </div>
+
+                      {/* Owner and Due Date row */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Owner</Label>
+                          <div className="relative">
+                            <User className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                            <Input
+                              value={item.owner || ''}
+                              onChange={(e) => updateExtractedItem(item.id, 'owner', e.target.value)}
+                              placeholder="Assignee..."
+                              className="h-8 pl-7 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Due Date</Label>
+                          <div className="relative">
+                            <Clock className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                            <Input
+                              type="date"
+                              value={item.dueDate || ''}
+                              onChange={(e) => updateExtractedItem(item.id, 'dueDate', e.target.value)}
+                              className="h-8 pl-7 text-sm"
+                            />
+                          </div>
                         </div>
                       </div>
-                    </label>
+                    </div>
                   ))}
                 </div>
               )}

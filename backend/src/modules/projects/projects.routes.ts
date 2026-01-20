@@ -5,6 +5,7 @@ import * as planItemsController from '../plan-items/plan-items.controller';
 import * as contentItemsController from '../content-items/content-items.controller';
 import * as activityReporterController from '../activity-reporter/activity-reporter.controller';
 import * as planUpdaterController from '../plan-updater/plan-updater.controller';
+import * as planCreatorController from '../plan-creator/plan-creator.controller';
 import { validateBody, validateQuery } from '../../middleware/validation';
 import { authenticate } from '../../middleware/auth';
 import { requireOrgContext } from '../../middleware/orgContext';
@@ -28,6 +29,10 @@ import {
   getPlanSuggestionsSchema,
   applyPlanUpdatesSchema,
 } from '../plan-updater/plan-updater.schema';
+import {
+  analyzePlanContentSchema,
+  createPlanFromSuggestionsSchema,
+} from '../plan-creator/plan-creator.schema';
 
 // Configure multer for CSV upload (memory storage, 5MB limit)
 const upload = multer({
@@ -526,6 +531,110 @@ router.post(
   '/:projectId/plan/import',
   upload.single('file'),
   planItemsController.importPlanItems
+);
+
+// ============================================================================
+// Nested Plan Creator Routes (AI-powered plan generation)
+// ============================================================================
+
+/**
+ * @swagger
+ * /projects/{projectId}/plan/ai-analyze:
+ *   post:
+ *     summary: Analyze content and generate plan suggestions
+ *     description: Use AI to analyze project requirements/content and generate a structured plan
+ *     tags: [Plan Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 description: Project requirements, description, or content to analyze
+ *               additionalContext:
+ *                 type: string
+ *                 description: Additional context for the AI (optional)
+ *     responses:
+ *       200:
+ *         description: AI-generated plan structure suggestions
+ */
+router.post(
+  '/:projectId/plan/ai-analyze',
+  validateBody(analyzePlanContentSchema),
+  planCreatorController.analyzePlanContent
+);
+
+/**
+ * @swagger
+ * /projects/{projectId}/plan/ai-create:
+ *   post:
+ *     summary: Create plan items from AI suggestions
+ *     description: Create plan items from the accepted AI-generated suggestions
+ *     tags: [Plan Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - planItems
+ *             properties:
+ *               planItems:
+ *                 type: array
+ *                 description: Plan items to create (may include children)
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - name
+ *                     - itemType
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     itemType:
+ *                       type: string
+ *                       enum: [workstream, milestone, activity, task, subtask]
+ *                     description:
+ *                       type: string
+ *                     owner:
+ *                       type: string
+ *                     children:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/PlanItemToCreate'
+ *     responses:
+ *       201:
+ *         description: Plan items created successfully
+ */
+router.post(
+  '/:projectId/plan/ai-create',
+  validateBody(createPlanFromSuggestionsSchema),
+  planCreatorController.createPlanFromSuggestions
 );
 
 // ============================================================================

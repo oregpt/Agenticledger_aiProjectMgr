@@ -20,6 +20,8 @@ import {
   Copy,
   Check,
   BookOpen,
+  Bot,
+  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,9 +72,14 @@ import {
   type ApiKey,
   type CreateApiKeyResponse,
 } from '@/api/api-keys.api';
+import { AISettingsTab } from '@/components/admin/AISettingsTab';
+import { PromptTemplatesTab } from '@/components/admin/PromptTemplatesTab';
+import { useAuthStore } from '@/stores/authStore';
 
 export function ConfigPage() {
   const [activeTab, setActiveTab] = useState('projects');
+  const { currentRole, currentOrgId } = useAuthStore();
+  const isPlatformAdmin = (currentRole?.level ?? 0) >= 100;
 
   return (
     <div className="space-y-6">
@@ -117,6 +124,16 @@ export function ConfigPage() {
             <Key className="h-4 w-4" />
             API Keys
           </TabsTrigger>
+          <TabsTrigger value="ai-settings" className="flex items-center gap-2">
+            <Bot className="h-4 w-4" />
+            AI Settings
+          </TabsTrigger>
+          {isPlatformAdmin && (
+            <TabsTrigger value="prompt-templates" className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Prompt Templates
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="projects">
@@ -138,6 +155,19 @@ export function ConfigPage() {
         <TabsContent value="api-keys">
           <ApiKeysTab />
         </TabsContent>
+
+        <TabsContent value="ai-settings">
+          <AISettingsTab
+            isPlatformAdmin={isPlatformAdmin}
+            organizationId={currentOrgId || 0}
+          />
+        </TabsContent>
+
+        {isPlatformAdmin && (
+          <TabsContent value="prompt-templates">
+            <PromptTemplatesTab isPlatformAdmin={isPlatformAdmin} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

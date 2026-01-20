@@ -24,6 +24,7 @@ import contentItemsRoutes from './modules/content-items/content-items.routes.js'
 import outputFormatterRoutes from './modules/output-formatter/output-formatter.routes.js';
 import configRoutes from './modules/config/config.routes.js';
 import apiKeysRoutes from './modules/api-keys/api-keys.routes.js';
+import promptTemplatesRoutes from './modules/prompt-templates/prompt-templates.routes.js';
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.use('/api/content-items', contentItemsRoutes);
 app.use('/api/format', outputFormatterRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/api-keys', apiKeysRoutes);
+app.use('/api/prompt-templates', promptTemplatesRoutes);
 
 // Raw OpenAPI spec (JSON) - must be before swagger-ui middleware
 app.get('/api/docs.json', (req, res) => {

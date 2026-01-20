@@ -1,9 +1,14 @@
 /**
  * AI Configuration
- * OpenAI and embedding settings for the AI Project Manager
+ * OpenAI, Anthropic, and embedding settings for the AI Project Manager
  */
 
+export type AIProvider = 'openai' | 'anthropic';
+
 export const aiConfig = {
+  // Active provider (can be switched via env var)
+  provider: (process.env.AI_PROVIDER || 'openai') as AIProvider,
+
   // OpenAI API
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '',
@@ -12,6 +17,14 @@ export const aiConfig = {
     embeddingDimensions: 1536,
     maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '4096', 10),
     temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.7'),
+  },
+
+  // Anthropic API
+  anthropic: {
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+    model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
+    maxTokens: parseInt(process.env.ANTHROPIC_MAX_TOKENS || '4096', 10),
+    temperature: parseFloat(process.env.ANTHROPIC_TEMPERATURE || '0.7'),
   },
 
   // Chunking settings

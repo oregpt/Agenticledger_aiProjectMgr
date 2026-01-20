@@ -1,4 +1,5 @@
 import { PrismaClient, RoleScope, MenuSection, SettingType, InvitationStatus } from '@prisma/client';
+import { seedDefaultTemplates } from '../src/modules/prompt-templates/prompt-templates.service.js';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -436,6 +437,25 @@ async function main() {
     } else {
       console.log(`Activity item type already exists: ${type.name}`);
     }
+  }
+
+  // ============================================================================
+  // 12. Create Default Prompt Templates
+  // ============================================================================
+  console.log('Creating default prompt templates...');
+
+  try {
+    const templateResults = await seedDefaultTemplates();
+    for (const result of templateResults) {
+      if (result.action === 'created') {
+        console.log(`Created prompt template: ${result.slug}`);
+      } else {
+        console.log(`Prompt template already exists: ${result.slug}`);
+      }
+    }
+  } catch (error) {
+    console.log('Warning: Could not seed prompt templates (table may not exist yet)');
+    console.log('Run prisma migrate dev first, then re-run seed');
   }
 
   // Enable some feature flags for sample org

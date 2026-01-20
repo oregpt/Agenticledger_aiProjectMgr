@@ -281,6 +281,121 @@ router.patch(
   organizationsController.updateOrganizationConfig
 );
 
+// ============================================================================
+// AI Settings Routes (under organization)
+// ============================================================================
+
+/**
+ * @swagger
+ * /organizations/{orgId}/ai-settings:
+ *   get:
+ *     summary: Get organization AI settings
+ *     description: Get AI provider configuration for the organization (requires org admin)
+ *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: orgId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Organization ID
+ *     responses:
+ *       200:
+ *         description: AI settings (overrides and effective)
+ *       403:
+ *         description: Admin access required
+ */
+router.get(
+  '/:orgId/ai-settings',
+  authenticate,
+  requireOrgContext,
+  requireOrgAdmin,
+  organizationsController.getOrgAISettings
+);
+
+/**
+ * @swagger
+ * /organizations/{orgId}/ai-settings:
+ *   patch:
+ *     summary: Update organization AI settings
+ *     description: Set organization-specific AI provider configuration (requires org admin)
+ *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: orgId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Organization ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               provider:
+ *                 type: string
+ *                 enum: [openai, anthropic]
+ *               openaiApiKey:
+ *                 type: string
+ *               openaiModel:
+ *                 type: string
+ *               anthropicApiKey:
+ *                 type: string
+ *               anthropicModel:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: AI settings updated
+ *       403:
+ *         description: Admin access required
+ */
+router.patch(
+  '/:orgId/ai-settings',
+  authenticate,
+  requireOrgContext,
+  requireOrgAdmin,
+  organizationsController.updateOrgAISettings
+);
+
+/**
+ * @swagger
+ * /organizations/{orgId}/ai-settings:
+ *   delete:
+ *     summary: Clear organization AI settings
+ *     description: Remove organization-specific AI settings, reverting to platform defaults (requires org admin)
+ *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *       - in: path
+ *         name: orgId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Organization ID
+ *     responses:
+ *       200:
+ *         description: AI settings cleared
+ *       403:
+ *         description: Admin access required
+ */
+router.delete(
+  '/:orgId/ai-settings',
+  authenticate,
+  requireOrgContext,
+  requireOrgAdmin,
+  organizationsController.clearOrgAISettings
+);
+
 /**
  * @swagger
  * /organizations/{orgId}:

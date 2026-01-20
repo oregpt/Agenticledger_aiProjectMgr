@@ -119,4 +119,72 @@ router.patch(
   platformSettingsController.updateSetting
 );
 
+/**
+ * @swagger
+ * /platform-settings/ai:
+ *   get:
+ *     summary: Get AI settings
+ *     description: Get platform AI provider settings (platform admin only)
+ *     tags: [Platform Settings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     responses:
+ *       200:
+ *         description: AI settings (API keys masked)
+ *       403:
+ *         description: Platform admin access required
+ */
+router.get(
+  '/ai',
+  authenticate,
+  requireOrgContext,
+  requirePlatformAdmin,
+  platformSettingsController.getAISettings
+);
+
+/**
+ * @swagger
+ * /platform-settings/ai:
+ *   patch:
+ *     summary: Update AI settings
+ *     description: Update platform AI provider settings (platform admin only)
+ *     tags: [Platform Settings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OrganizationId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               provider:
+ *                 type: string
+ *                 enum: [openai, anthropic]
+ *               openaiApiKey:
+ *                 type: string
+ *               openaiModel:
+ *                 type: string
+ *               anthropicApiKey:
+ *                 type: string
+ *               anthropicModel:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: AI settings updated
+ *       403:
+ *         description: Platform admin access required
+ */
+router.patch(
+  '/ai',
+  authenticate,
+  requireOrgContext,
+  requirePlatformAdmin,
+  platformSettingsController.updateAISettings
+);
+
 export default router;

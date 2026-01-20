@@ -8,6 +8,7 @@ import { ProjectSwitcher } from '@/components/plan/ProjectSwitcher';
 import { PlanTree } from '@/components/plan/PlanTree';
 import { PlanImport } from '@/components/plan/PlanImport';
 import { PlanUpdater } from '@/components/plan/PlanUpdater';
+import { PlanCreator } from '@/components/plan/PlanCreator';
 import { AddPlanItemDialog } from '@/components/plan/AddPlanItemDialog';
 import { EditPlanItemDialog } from '@/components/plan/EditPlanItemDialog';
 import { useProjectStore } from '@/stores/projectStore';
@@ -179,7 +180,8 @@ export function PlanPage() {
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="view">Plan View</TabsTrigger>
-            <TabsTrigger value="updater">Plan Updater</TabsTrigger>
+            <TabsTrigger value="creator">AI Creator</TabsTrigger>
+            <TabsTrigger value="updater">AI Updater</TabsTrigger>
             <TabsTrigger value="import">Import CSV</TabsTrigger>
           </TabsList>
 
@@ -224,6 +226,11 @@ export function PlanPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* AI Plan Creator Tab */}
+        <TabsContent value="creator">
+          <PlanCreator />
         </TabsContent>
 
         {/* Plan Updater Tab */}

@@ -810,3 +810,45 @@ model ActivityReport {
   @@index([periodStart, periodEnd])
   @@index([isActive])
 }
+
+// ============================================================================
+// PROMPT TEMPLATES (Admin-editable AI agent prompts)
+// ============================================================================
+
+model PromptTemplate {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @default(uuid())
+
+  // Unique identifier for the template (e.g., "intake-agent", "plan-creator")
+  slug            String    @unique
+  name            String
+  description     String?
+
+  // Category for grouping in UI (e.g., "agent", "utility", "formatter")
+  category        String    @default("agent")
+
+  // The actual prompts
+  systemPrompt    String    @db.Text
+  userPromptTemplate String @db.Text
+
+  // Metadata about available variables for this template
+  // JSON array: [{ "name": "projectName", "description": "The project name", "required": true }]
+  variables       Json      @default("[]")
+
+  // Version tracking
+  version         Int       @default(1)
+
+  // Status
+  isActive        Boolean   @default(true)
+  isSystem        Boolean   @default(true)  // System templates cannot be deleted
+
+  // Audit
+  updatedByUserId Int?
+  updatedByEmail  String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}

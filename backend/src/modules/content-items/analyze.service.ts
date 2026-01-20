@@ -4,7 +4,8 @@
  */
 
 import prisma from '../../config/database.js';
-import { generateJsonCompletion, isOpenAIConfigured } from '../../services/ai/openai.service.js';
+import { generateJsonCompletion } from '../../services/ai/unified.service.js';
+import { isAIConfiguredForOrg } from '../../services/ai/settings.service.js';
 import {
   getIntakeAgentSystemPrompt,
   getIntakeAgentUserPrompt,
@@ -14,8 +15,56 @@ import {
   type ContentTypeContext,
   type ActivityTypeContext,
 } from '../../services/ai/prompts/intake-agent.js';
+import { getPromptsForAgent } from '../prompt-templates/prompt-templates.service.js';
 import { createContentChunks } from '../../services/ai/embedding.service.js';
 import { Prisma } from '@prisma/client';
+
+// Token limit safety: ~4 chars per token, leave room for system prompt (~2K tokens) and response (~2K tokens)
+// OpenAI TPM limit is 30K, so we target ~20K tokens for content = ~80K chars
+// Being conservative with 60K chars (~15K tokens) for safety
+const MAX_CONTENT_CHARS = 60000;
+
+/**
+ * Simple template interpolation for prompt templates
+ * Replaces {{variable}} placeholders with values from context
+ */
+function interpolatePromptTemplate(template: string, context: Record<string, unknown>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    const value = context[key];
+    if (value === undefined || value === null) {
+      return match; // Keep placeholder if no value
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      // Format arrays nicely
+      return JSON.stringify(value, null, 2);
+    }
+    return String(value);
+  });
+}
+
+/**
+ * Truncate content to fit within token limits
+ * Adds a note if truncation occurred
+ */
+function truncateContent(content: string): { content: string; truncated: boolean } {
+  if (content.length <= MAX_CONTENT_CHARS) {
+    return { content, truncated: false };
+  }
+
+  const truncatedContent = content.slice(0, MAX_CONTENT_CHARS);
+  // Try to truncate at a sentence or paragraph boundary
+  const lastPeriod = truncatedContent.lastIndexOf('.');
+  const lastNewline = truncatedContent.lastIndexOf('\n');
+  const cutPoint = Math.max(lastPeriod, lastNewline, MAX_CONTENT_CHARS - 500);
+
+  return {
+    content: truncatedContent.slice(0, cutPoint + 1) + '\n\n[Content truncated due to length - analyzing first portion only]',
+    truncated: true,
+  };
+}
 
 interface AnalyzeContentInput {
   projectId: string;
@@ -127,8 +176,9 @@ export async function analyzeContent(
     buildPlanItemContexts(input.projectId),
   ]);
 
-  // Check if OpenAI is configured
-  if (!isOpenAIConfigured()) {
+  // Check if AI is configured for this organization
+  const aiConfigured = await isAIConfiguredForOrg(organizationId);
+  if (!aiConfigured) {
     // Return empty analysis if OpenAI not configured
     return {
       analysis: {
@@ -182,16 +232,41 @@ export async function analyzeContent(
     userDate: input.dateOccurred?.toISOString().split('T')[0],
   };
 
-  // Generate prompts
-  const systemPrompt = getIntakeAgentSystemPrompt(context);
-  const userPrompt = getIntakeAgentUserPrompt(input.content);
+  // Truncate content if too long for OpenAI token limits
+  const { content: truncatedContent, truncated } = truncateContent(input.content);
+  if (truncated) {
+    console.log(`[AI Analysis] Content truncated from ${input.content.length} to ${truncatedContent.length} chars`);
+  }
 
-  // Call OpenAI
+  // Generate prompts - check database for customized prompts first, fallback to hardcoded
+  let systemPrompt: string;
+  let userPrompt: string;
+
+  try {
+    const dbPrompts = await getPromptsForAgent('intake-agent');
+    if (dbPrompts) {
+      // Use database prompts - apply context substitution
+      systemPrompt = interpolatePromptTemplate(dbPrompts.systemPrompt, context);
+      userPrompt = interpolatePromptTemplate(dbPrompts.userPromptTemplate, { content: truncatedContent });
+    } else {
+      // Fallback to hardcoded functions
+      systemPrompt = getIntakeAgentSystemPrompt(context);
+      userPrompt = getIntakeAgentUserPrompt(truncatedContent);
+    }
+  } catch (error) {
+    // If database lookup fails, use hardcoded defaults
+    console.log('[AI Analysis] Using hardcoded prompts (database lookup failed)');
+    systemPrompt = getIntakeAgentSystemPrompt(context);
+    userPrompt = getIntakeAgentUserPrompt(truncatedContent);
+  }
+
+  // Call AI (uses org-specific settings if configured)
   const analysis = await generateJsonCompletion<AnalysisResult>([
     { role: 'system', content: systemPrompt },
     { role: 'user', content: userPrompt },
   ], {
     temperature: 0.3, // Lower temperature for more consistent extraction
+    organizationId, // Use org-specific API keys and provider
   });
 
   // Validate and filter suggestions against actual data
