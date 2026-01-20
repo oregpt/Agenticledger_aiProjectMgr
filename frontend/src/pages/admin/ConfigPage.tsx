@@ -22,6 +22,8 @@ import {
   BookOpen,
   Bot,
   Sparkles,
+  Building2,
+  Shield,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,6 +76,8 @@ import {
 } from '@/api/api-keys.api';
 import { AISettingsTab } from '@/components/admin/AISettingsTab';
 import { PromptTemplatesTab } from '@/components/admin/PromptTemplatesTab';
+import { OrganizationTab } from '@/components/admin/OrganizationTab';
+import { RolesTab } from '@/components/admin/RolesTab';
 import { useAuthStore } from '@/stores/authStore';
 
 export function ConfigPage() {
@@ -128,6 +132,14 @@ export function ConfigPage() {
             <Bot className="h-4 w-4" />
             AI Settings
           </TabsTrigger>
+          <TabsTrigger value="organization" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Organization
+          </TabsTrigger>
+          <TabsTrigger value="roles" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Roles
+          </TabsTrigger>
           {isPlatformAdmin && (
             <TabsTrigger value="prompt-templates" className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
@@ -161,6 +173,14 @@ export function ConfigPage() {
             isPlatformAdmin={isPlatformAdmin}
             organizationId={currentOrgId || 0}
           />
+        </TabsContent>
+
+        <TabsContent value="organization">
+          <OrganizationTab />
+        </TabsContent>
+
+        <TabsContent value="roles">
+          <RolesTab />
         </TabsContent>
 
         {isPlatformAdmin && (

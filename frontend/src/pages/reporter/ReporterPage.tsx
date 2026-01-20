@@ -13,12 +13,15 @@ import {
   ExternalLink,
   FileCode,
   Presentation,
+  History,
+  Plus,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -50,11 +53,13 @@ import type {
   SourceContentItem,
 } from '@/api/activity-reporter.api';
 import { outputFormatterApi } from '@/api/output-formatter.api';
+import { ReportHistoryTab } from '@/components/reporter/ReportHistoryTab';
 
 type PeriodPreset = 'this_week' | 'last_week' | 'last_2_weeks' | 'custom';
 
 export function ReporterPage() {
   const { currentProject } = useProjectStore();
+  const [activeTab, setActiveTab] = useState('generate');
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('this_week');
   const [periodStart, setPeriodStart] = useState(format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
   const [periodEnd, setPeriodEnd] = useState(format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
@@ -219,6 +224,22 @@ export function ReporterPage() {
     );
   }
 
+  // Handle loading a report from history
+  const handleViewReport = (loadedReport: ActivityReport) => {
+    setReport(loadedReport);
+    setActiveTab('generate');
+    // Open all sections for better visibility
+    setOpenSections({
+      summary: true,
+      statusUpdates: true,
+      actionItems: true,
+      risks: true,
+      decisions: true,
+      blockers: true,
+      suggestedUpdates: true,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -229,7 +250,7 @@ export function ReporterPage() {
             Generate AI-powered activity reports for {currentProject.name}.
           </p>
         </div>
-        {report && (
+        {report && activeTab === 'generate' && (
           <div className="flex gap-2">
             <Button variant="outline" onClick={exportToMarkdown} disabled={isExportingMarkdown}>
               {isExportingMarkdown ? (
@@ -251,8 +272,22 @@ export function ReporterPage() {
         )}
       </div>
 
-      {/* Report Parameters */}
-      <Card>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList>
+          <TabsTrigger value="generate" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Generate Report
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Report History
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="generate" className="mt-4 space-y-6">
+          {/* Report Parameters */}
+          <Card>
         <CardHeader>
           <CardTitle>Report Parameters</CardTitle>
           <CardDescription>Configure the reporting period and filters.</CardDescription>
@@ -479,41 +514,47 @@ export function ReporterPage() {
         </div>
       )}
 
-      {/* Source Dialog */}
-      <Dialog open={sourceDialogOpen} onOpenChange={setSourceDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Source Content</DialogTitle>
-            <DialogDescription>
-              The original content that this item was extracted from.
-            </DialogDescription>
-          </DialogHeader>
-          {loadingSources ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : selectedSources.length === 0 ? (
-            <p className="text-muted-foreground">No source content available.</p>
-          ) : (
-            <div className="space-y-4">
-              {selectedSources.map((source) => (
-                <div key={source.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{source.title}</h4>
-                    <Badge variant="outline">{source.sourceType}</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {new Date(source.dateOccurred).toLocaleDateString()}
-                  </p>
-                  <div className="bg-muted rounded p-3 text-sm whitespace-pre-wrap max-h-[200px] overflow-y-auto">
-                    {source.aiSummary || source.rawContent || 'No content available'}
-                  </div>
+          {/* Source Dialog */}
+          <Dialog open={sourceDialogOpen} onOpenChange={setSourceDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Source Content</DialogTitle>
+                <DialogDescription>
+                  The original content that this item was extracted from.
+                </DialogDescription>
+              </DialogHeader>
+              {loadingSources ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
-              ))}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+              ) : selectedSources.length === 0 ? (
+                <p className="text-muted-foreground">No source content available.</p>
+              ) : (
+                <div className="space-y-4">
+                  {selectedSources.map((source) => (
+                    <div key={source.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{source.title}</h4>
+                        <Badge variant="outline">{source.sourceType}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {new Date(source.dateOccurred).toLocaleDateString()}
+                      </p>
+                      <div className="bg-muted rounded p-3 text-sm whitespace-pre-wrap max-h-[200px] overflow-y-auto">
+                        {source.aiSummary || source.rawContent || 'No content available'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-4">
+          <ReportHistoryTab onViewReport={handleViewReport} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

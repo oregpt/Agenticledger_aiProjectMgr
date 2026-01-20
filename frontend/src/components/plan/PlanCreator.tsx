@@ -305,18 +305,6 @@ export function PlanCreator() {
     }
   };
 
-  // Get item type badge color
-  const getItemTypeBadge = (itemType: ItemType) => {
-    const colors: Record<ItemType, string> = {
-      workstream: 'bg-indigo-100 text-indigo-800',
-      milestone: 'bg-purple-100 text-purple-800',
-      activity: 'bg-blue-100 text-blue-800',
-      task: 'bg-green-100 text-green-800',
-      subtask: 'bg-gray-100 text-gray-800',
-    };
-    return colors[itemType];
-  };
-
   // Count selected items recursively
   const countSelected = (items: EditablePlanItem[]): number => {
     let count = 0;

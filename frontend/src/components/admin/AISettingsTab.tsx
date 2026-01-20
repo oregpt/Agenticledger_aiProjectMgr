@@ -36,7 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useAuthStore } from '@/stores/authStore';
+// useAuthStore removed - not used in this component
 import {
   aiSettingsApi,
   type AIProvider,

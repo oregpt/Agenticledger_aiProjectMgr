@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Upload, FileText, X, CheckCircle, Building, Calendar, Tag, Sparkles, AlertTriangle, User, Clock } from 'lucide-react';
+import { Upload, FileText, X, CheckCircle, Building, Calendar, Tag, Sparkles, AlertTriangle, User, Clock, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ProjectSwitcher } from '@/components/plan/ProjectSwitcher';
 import { useProjectStore } from '@/stores/projectStore';
@@ -25,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Pencil, Wand2 } from 'lucide-react';
+import { IntakeHistoryTab } from '@/components/intake/IntakeHistoryTab';
 
 type ViewMode = 'form' | 'analysis';
 
@@ -48,6 +50,9 @@ interface EditableExtractedItem {
 
 export function IntakePage() {
   const { currentProject, planItems, planItemsLoading, fetchPlanItems } = useProjectStore();
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState('new-intake');
 
   // Form state
   const [title, setTitle] = useState('');
@@ -883,18 +888,32 @@ export function IntakePage() {
         <ProjectSwitcher />
       </div>
 
-      {/* Success Message */}
-      {success && (
-        <Card className="border-green-500 bg-green-50">
-          <CardContent className="flex items-center gap-3 py-4">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            <span className="text-green-700 font-medium">Content saved successfully!</span>
-          </CardContent>
-        </Card>
-      )}
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList>
+          <TabsTrigger value="new-intake" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            New Intake
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Intake History
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Intake Form */}
-      <div className="grid gap-6 lg:grid-cols-2">
+        <TabsContent value="new-intake" className="mt-4">
+          {/* Success Message */}
+          {success && (
+            <Card className="border-green-500 bg-green-50 mb-6">
+              <CardContent className="flex items-center gap-3 py-4">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span className="text-green-700 font-medium">Content saved successfully!</span>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Intake Form */}
+          <div className="grid gap-6 lg:grid-cols-2">
         {/* Left Column - Main Form */}
         <div className="space-y-6">
           <Card>
@@ -1210,6 +1229,12 @@ export function IntakePage() {
           </div>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-4">
+          <IntakeHistoryTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

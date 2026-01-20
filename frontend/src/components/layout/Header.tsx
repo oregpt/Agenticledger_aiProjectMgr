@@ -1,6 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, User, Bell, Shield, Palette, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/stores/authStore';
 import { OrgSwitcher } from '@/components/common/OrgSwitcher';
 import { ProjectSwitcher } from '@/components/plan/ProjectSwitcher';
@@ -31,29 +38,47 @@ export function Header() {
         <ProjectSwitcher />
       </div>
 
-      {/* User Menu */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
-          <Settings className="h-4 w-4" />
-        </Button>
-
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-            {user?.firstName?.[0]}
-            {user?.lastName?.[0]}
-          </div>
-          <div className="text-sm">
-            <p className="font-medium">
-              {user?.firstName} {user?.lastName}
-            </p>
-            <p className="text-xs text-muted-foreground">{currentOrg?.role.name}</p>
-          </div>
-        </div>
-
-        <Button variant="ghost" size="icon" onClick={handleLogout}>
-          <LogOut className="h-4 w-4" />
-        </Button>
-      </div>
+      {/* User Profile Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="flex items-center gap-2 px-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+              {user?.firstName?.[0]}
+              {user?.lastName?.[0]}
+            </div>
+            <div className="text-sm text-left">
+              <p className="font-medium">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground">{currentOrg?.role.name}</p>
+            </div>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onClick={() => navigate('/settings?tab=profile')}>
+            <User className="mr-2 h-4 w-4" />
+            Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/settings?tab=notifications')}>
+            <Bell className="mr-2 h-4 w-4" />
+            Notifications
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/settings?tab=security')}>
+            <Shield className="mr-2 h-4 w-4" />
+            Security
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/settings?tab=appearance')}>
+            <Palette className="mr-2 h-4 w-4" />
+            Appearance
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   );
 }

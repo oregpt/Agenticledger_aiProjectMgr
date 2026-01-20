@@ -200,6 +200,80 @@ export const getOrganizationConfig = async (orgId: number) => {
   return org.config;
 };
 
+export const getOrganizationUsers = async (orgId: number) => {
+  const org = await prisma.organization.findUnique({
+    where: { id: orgId },
+  });
+
+  if (!org) {
+    throw new AppError(ErrorCodes.NOT_FOUND, 'Organization not found', 404);
+  }
+
+  const memberships = await prisma.organizationUser.findMany({
+    where: {
+      organizationId: orgId,
+      isActive: true,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+      role: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          level: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  return memberships.map((m) => ({
+    id: m.user.id,
+    firstName: m.user.firstName,
+    lastName: m.user.lastName,
+    email: m.user.email,
+    avatarUrl: m.user.avatarUrl,
+    role: m.role,
+    joinedAt: m.createdAt,
+  }));
+};
+
+export const removeUserFromOrganization = async (orgId: number, userId: number) => {
+  const membership = await prisma.organizationUser.findUnique({
+    where: {
+      userId_organizationId: {
+        organizationId: orgId,
+        userId: userId,
+      },
+    },
+  });
+
+  if (!membership) {
+    throw new AppError(ErrorCodes.NOT_FOUND, 'User not found in organization', 404);
+  }
+
+  await prisma.organizationUser.update({
+    where: {
+      userId_organizationId: {
+        organizationId: orgId,
+        userId: userId,
+      },
+    },
+    data: { isActive: false },
+  });
+
+  return { message: 'User removed from organization' };
+};
+
 export const deleteOrganization = async (orgId: number) => {
   const org = await prisma.organization.findUnique({
     where: { id: orgId },

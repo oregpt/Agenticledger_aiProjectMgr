@@ -139,6 +139,173 @@ frontend/src/components/plan/PlanCreator.tsx
 
 ---
 
+## Session: January 20, 2026 (Continued)
+
+### Session Goal
+Add history/list views to the Intake and Activity Reporter pages, allowing users to browse past content items and generated reports.
+
+### Features Implemented
+
+#### 1. Intake History Tab (Primary Feature)
+Added a new "Intake History" tab to the Intake page with comprehensive browsing capabilities.
+
+**What was built:**
+- **Tab Navigation**: IntakePage now has "New Intake" and "Intake History" tabs
+- **IntakeHistoryTab Component**: Full-featured history view including:
+  - Search filter with debounce (500ms)
+  - Date range filters (start/end date)
+  - Source type filter (file, text, email, calendar, transcript)
+  - Processing status filter (pending, processing, completed, failed)
+  - Content type and Activity type dropdown filters
+  - Table with expandable rows showing:
+    - Title, date occurred, source type badge, status badge, tags
+    - Expanded view: AI summary, linked plan items, extracted items
+  - Pagination with page/limit/total controls
+  - "View" action button for full details
+
+- **ContentItemDetailDialog Component**: Modal dialog showing complete content item details:
+  - Meta information grid (date occurred, source type, status, project week)
+  - Tags, content types, activity types badges
+  - Linked plan items count
+  - AI Summary with purple highlight styling
+  - Extracted Items list (action items, risks, blockers, decisions)
+  - Raw content preview with monospace formatting
+  - File attachment info (name, size, mime type)
+  - Created/updated timestamps and creator info
+
+**Files Created:**
+```
+frontend/src/components/intake/IntakeHistoryTab.tsx
+frontend/src/components/intake/ContentItemDetailDialog.tsx
+```
+
+**Files Modified:**
+```
+frontend/src/pages/intake/IntakePage.tsx (added tabs wrapper, imports)
+```
+
+#### 2. Report History Tab (Primary Feature)
+Added a new "Report History" tab to the Reporter page with browsing and export capabilities.
+
+**What was built:**
+- **Tab Navigation**: ReporterPage now has "Generate Report" and "Report History" tabs
+- **ReportHistoryTab Component**: Full-featured history view including:
+  - Date range filter card (start/end date)
+  - Clear filters button
+  - Table with columns: Title, Period, Created, Summary preview, Actions
+  - Dropdown menu actions:
+    - View Report (loads into Generate Report tab)
+    - Export Markdown (downloads .md file)
+    - Export PowerPoint (downloads .pptx file)
+  - Pagination with page/limit/total controls
+  - Loading states and empty state messaging
+
+- **View Report Flow**: When clicking "View Report" from history:
+  - Report loads into the Generate Report tab
+  - All sections auto-expand for visibility
+  - Tab automatically switches to "Generate Report"
+
+**Files Created:**
+```
+frontend/src/components/reporter/ReportHistoryTab.tsx
+```
+
+**Files Modified:**
+```
+frontend/src/pages/reporter/ReporterPage.tsx (added tabs wrapper, handleViewReport callback)
+```
+
+### Technical Details
+
+**API Clients Used (pre-existing):**
+- `content-items.api.ts` - `getProjectContent(projectId, params)` for content item listing
+- `activity-reporter.api.ts` - `listReports(projectId, params)` for report listing
+- `output-formatter.api.ts` - `formatAsMarkdown()`, `formatAsPptx()` for exports
+
+**UI Components Used:**
+- Tabs, TabsList, TabsTrigger, TabsContent from shadcn/ui
+- Table, TableHeader, TableBody, TableRow, TableCell
+- Collapsible, CollapsibleTrigger, CollapsibleContent for expandable rows
+- DropdownMenu for action menus
+- Dialog for detail modal
+- Badge, Button, Input, Label, Select
+
+**State Management Pattern:**
+- Filter state with useState hooks
+- Debounced search (500ms delay)
+- Pagination state (page, limit, total, totalPages)
+- useCallback for memoized fetch functions
+- useEffect for data fetching on filter changes
+
+### Issues Encountered & Resolved
+
+1. **Wrong project directory initially**
+   - Searched in `AgenticLedger-Prod` instead of `Custom Applications/AIProjectManager`
+   - Solution: User clarified correct path, re-explored codebase
+
+2. **Missing UI components (Separator, ScrollArea)**
+   - ContentItemDetailDialog initially used non-existent components
+   - Solution: Replaced `<Separator />` with `<hr className="my-4 border-t border-gray-200" />`
+   - Solution: Replaced `<ScrollArea>` with `<div className="flex-1 overflow-y-auto pr-4 max-h-[60vh]">`
+
+3. **API Response Format Mismatch (IntakeHistoryTab)**
+   - **Error**: `Cannot read properties of undefined (reading 'total')` and `Cannot read properties of undefined (reading 'length')`
+   - **Root cause**: Frontend code expected `response.data.items` and `response.data.pagination`, but backend's `paginatedResponse` utility returns items directly in `response.data` (as array) and pagination in `response.meta`
+   - **Investigation**: Verified backend response format via curl tests:
+     ```json
+     {"success": true, "data": [...], "meta": {"page": 1, "limit": 20, "total": 0, "totalPages": 0}}
+     ```
+   - **Solution**: Modified IntakeHistoryTab.tsx to handle both response formats:
+     ```typescript
+     const itemsArray = Array.isArray(response.data) ? response.data : (response.data as any).items || [];
+     const meta = (response as any).meta || (response.data as any).pagination || { total: 0, totalPages: 0 };
+     ```
+   - **Note**: ReportHistoryTab did not need this fix because `listReports` returns `{data: {items: [], pagination: {}}}` format
+
+### Testing Performed
+
+**Backend API Tests:**
+- ✅ POST /api/auth/login - Authentication working (orgadmin@acme.local)
+- ✅ GET /api/projects?organizationId=2 - Returns projects list
+- ✅ GET /api/projects/:projectId/content - Returns content items (empty array, pagination working)
+- ✅ GET /api/projects/:projectId/activity-reports - Returns activity reports (empty array, pagination working)
+
+**Frontend Browser Tests (Claude Automation):**
+- ✅ Intake page tabs display correctly ("+ New Intake" and "Intake History")
+- ✅ Intake History tab shows filters (search, dates, source type, status, content type, activity type)
+- ✅ Intake History tab shows empty state with correct messaging
+- ✅ Reporter page tabs display correctly ("+ Generate Report" and "Report History")
+- ✅ Report History tab shows Date Range Filter card
+- ✅ Report History tab shows Activity Reports table with correct empty state
+- ✅ No console errors in either history tab
+
+### UI/UX Patterns Applied
+
+- **Consistent Tab Pattern**: Followed existing PlanPage.tsx pattern with icon + label triggers
+- **Expandable Rows**: Chevron rotation animation, muted background for expanded content
+- **Action Menus**: DropdownMenu with icons for each action
+- **Empty States**: Centered icon + heading + helpful suggestion message
+- **Loading States**: Centered Loader2 spinner with animation
+- **Filter Cards**: Card wrapper with clear button when filters active
+
+### Files Summary
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `IntakeHistoryTab.tsx` | Created | History view with filters, table, pagination |
+| `ContentItemDetailDialog.tsx` | Created | Full detail modal for content items |
+| `IntakePage.tsx` | Modified | Added tabs wrapper |
+| `ReportHistoryTab.tsx` | Created | Report list with filters, actions |
+| `ReporterPage.tsx` | Modified | Added tabs wrapper, view report handler |
+
+### Next Steps / Future Work
+1. Add bulk actions for content items (delete, re-process)
+2. Add export functionality for content items
+3. Add report comparison view
+4. Add report templates/scheduling
+
+---
+
 ## Architecture Notes
 
 ### Multi-tenant Structure

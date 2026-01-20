@@ -120,6 +120,37 @@ export const deleteOrganization = async (
   }
 };
 
+// Organization Users endpoints
+
+export const getOrganizationUsers = async (
+  req: Request<{ orgId: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const orgId = parseInt(req.params.orgId, 10);
+    const users = await organizationsService.getOrganizationUsers(orgId);
+    successResponse(res, users);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeOrganizationUser = async (
+  req: Request<{ orgId: string; userId: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const orgId = parseInt(req.params.orgId, 10);
+    const userId = parseInt(req.params.userId, 10);
+    const result = await organizationsService.removeUserFromOrganization(orgId, userId);
+    successResponse(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // AI Settings endpoints for organizations
 
 export const getOrgAISettings = async (

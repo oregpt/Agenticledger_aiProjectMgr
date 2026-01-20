@@ -126,6 +126,7 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         currentOrgId: state.currentOrgId,
+        isAuthenticated: state.isAuthenticated, // Now persisted!
       }),
     }
   )

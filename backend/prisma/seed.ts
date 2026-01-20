@@ -96,14 +96,11 @@ async function main() {
   console.log('Creating default menus...');
 
   const menus = [
-    // Main Section
-    { name: 'Dashboard', slug: 'dashboard', path: '/dashboard', icon: 'LayoutDashboard', section: MenuSection.MAIN, sortOrder: 1 },
-    { name: 'Plan', slug: 'plan', path: '/plan', icon: 'ListTree', section: MenuSection.MAIN, sortOrder: 2 },
-    { name: 'Intake', slug: 'intake', path: '/intake', icon: 'Inbox', section: MenuSection.MAIN, sortOrder: 3 },
-    { name: 'Activity Reporter', slug: 'reports', path: '/reporter', icon: 'ClipboardList', section: MenuSection.MAIN, sortOrder: 4 },
-    { name: 'Data Export', slug: 'data_export', path: '/data-export', icon: 'Download', section: MenuSection.MAIN, sortOrder: 5 },
-    { name: 'Settings', slug: 'settings', path: '/settings', icon: 'Settings', section: MenuSection.MAIN, sortOrder: 6 },
-    { name: 'Audit Log', slug: 'audit_log', path: '/audit-log', icon: 'History', section: MenuSection.MAIN, sortOrder: 7 },
+    // Main Section (Agent tabs - these show in the horizontal nav)
+    { name: 'Plan', slug: 'plan', path: '/plan', icon: 'ListTree', section: MenuSection.MAIN, sortOrder: 1 },
+    { name: 'Intake', slug: 'intake', path: '/intake', icon: 'Inbox', section: MenuSection.MAIN, sortOrder: 2 },
+    { name: 'Activity Reporter', slug: 'reports', path: '/reporter', icon: 'ClipboardList', section: MenuSection.MAIN, sortOrder: 3 },
+    // Note: Settings moved to profile dropdown, Data Export and Audit Log removed (were dummy pages)
 
     // Admin Section
     { name: 'Organization', slug: 'admin_organization', path: '/admin/organization', icon: 'Building2', section: MenuSection.ADMIN, sortOrder: 1 },
@@ -135,49 +132,31 @@ async function main() {
   // Permission matrix: [roleSlug][menuSlug] = { C, R, U, D }
   const permissionMatrix: Record<string, Record<string, { c: boolean; r: boolean; u: boolean; d: boolean }>> = {
     viewer: {
-      dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: false, r: true, u: false, d: false },
       intake: { c: false, r: true, u: false, d: false },
       reports: { c: false, r: true, u: false, d: false },
-      settings: { c: false, r: true, u: false, d: false },
     },
     standard_user: {
-      dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: true, r: true, u: true, d: false },
       intake: { c: true, r: true, u: true, d: false },
       reports: { c: true, r: true, u: true, d: true },
-      data_export: { c: false, r: true, u: false, d: false },
-      settings: { c: false, r: true, u: true, d: false },
-      audit_log: { c: false, r: true, u: false, d: false },
     },
     advanced_user: {
-      dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: true, r: true, u: true, d: true },
       intake: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
-      data_export: { c: false, r: true, u: true, d: false },
-      settings: { c: false, r: true, u: true, d: false },
-      audit_log: { c: false, r: true, u: false, d: false },
     },
     org_admin: {
-      dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: true, r: true, u: true, d: true },
       intake: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
-      data_export: { c: true, r: true, u: true, d: true },
-      settings: { c: true, r: true, u: true, d: true },
-      audit_log: { c: false, r: true, u: false, d: false },
       admin_organization: { c: true, r: true, u: true, d: true },
       admin_roles: { c: true, r: true, u: true, d: true },
     },
     platform_admin: {
-      dashboard: { c: false, r: true, u: false, d: false },
       plan: { c: true, r: true, u: true, d: true },
       intake: { c: true, r: true, u: true, d: true },
       reports: { c: true, r: true, u: true, d: true },
-      data_export: { c: true, r: true, u: true, d: true },
-      settings: { c: true, r: true, u: true, d: true },
-      audit_log: { c: false, r: true, u: false, d: false },
       admin_organization: { c: true, r: true, u: true, d: true },
       admin_roles: { c: true, r: true, u: true, d: true },
       platform_settings: { c: true, r: true, u: true, d: true },

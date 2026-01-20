@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Layouts
 import { AuthLayout } from '@/components/layout/AuthLayout';
-import { AppLayout } from '@/components/layout/AppLayout';
 import { AgentLayout } from '@/components/layout/AgentLayout';
 
 // Auth Pages
@@ -12,11 +11,8 @@ import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
 import { AcceptInvitationPage } from '@/pages/auth/AcceptInvitationPage';
 
-// Sample Pages
+// Dashboard Page
 import { DashboardPage } from '@/pages/sample/DashboardPage';
-import { ReportsPage } from '@/pages/sample/ReportsPage';
-import { DataExportPage } from '@/pages/sample/DataExportPage';
-import { AuditLogPage } from '@/pages/sample/AuditLogPage';
 
 // Plan Pages
 import { PlanPage } from '@/pages/plan/PlanPage';
@@ -31,8 +27,6 @@ import { ReporterPage } from '@/pages/reporter/ReporterPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 
 // Admin Pages
-import { OrganizationPage } from '@/pages/admin/OrganizationPage';
-import { RolesPage } from '@/pages/admin/RolesPage';
 import { ConfigPage } from '@/pages/admin/ConfigPage';
 
 // Platform Admin Pages
@@ -57,7 +51,7 @@ function App() {
         <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
       </Route>
 
-      {/* Agent Routes (Main App) */}
+      {/* Main App Routes (Agent Layout) */}
       <Route
         element={
           <ProtectedRoute>
@@ -65,7 +59,10 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<Navigate to="/plan" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+        {/* Dashboard */}
+        <Route path="/dashboard" element={<DashboardPage />} />
 
         {/* Agent Pages */}
         <Route path="/plan" element={<PlanPage />} />
@@ -77,26 +74,6 @@ function App() {
 
         {/* Settings Page */}
         <Route path="/settings" element={<SettingsPage />} />
-      </Route>
-
-      {/* Legacy App Routes (Sidebar layout) */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/dashboard" element={<DashboardPage />} />
-
-        {/* Sample Pages */}
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/data-export" element={<DataExportPage />} />
-        <Route path="/audit-log" element={<AuditLogPage />} />
-
-        {/* Admin Routes */}
-        <Route path="/admin/organization" element={<OrganizationPage />} />
-        <Route path="/admin/roles" element={<RolesPage />} />
 
         {/* Platform Admin Routes */}
         <Route path="/platform/settings" element={<PlatformSettingsPage />} />

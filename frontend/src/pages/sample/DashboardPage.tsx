@@ -101,7 +101,7 @@ export function DashboardPage() {
           <CardHeader>
             <CardTitle>Select a Project</CardTitle>
             <CardDescription>
-              Use the Project Switcher in the sidebar to select a project and view its dashboard.
+              Use the Project Switcher in the header to select a project and view its dashboard.
             </CardDescription>
           </CardHeader>
           <CardContent>

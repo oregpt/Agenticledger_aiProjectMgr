@@ -1,7 +1,14 @@
 import { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, Settings, ClipboardList, Inbox, LayoutDashboard, Cog } from 'lucide-react';
+import { LogOut, ClipboardList, Inbox, Cog, User, Bell, Shield, Palette, ChevronDown, Home, ListTree, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/stores/authStore';
 import { usePermissionsStore } from '@/stores/permissionsStore';
 import { useFeatureFlagsStore } from '@/stores/featureFlagsStore';
@@ -14,7 +21,8 @@ import { PageLoader } from '@/components/common/LoadingSpinner';
 import { cn } from '@/lib/utils';
 
 const agentTabs = [
-  { id: 'plan', label: 'Plan Agent', path: '/plan', icon: LayoutDashboard, requiresProject: true },
+  { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: Home, requiresProject: false },
+  { id: 'plan', label: 'Plan Agent', path: '/plan', icon: ListTree, requiresProject: true },
   { id: 'intake', label: 'Intake Agent', path: '/intake', icon: Inbox, requiresProject: true },
   { id: 'reporter', label: 'Activity Reporter', path: '/reporter', icon: ClipboardList, requiresProject: true },
   { id: 'admin', label: 'Admin', path: '/admin/config', icon: Cog, requiresProject: false },
@@ -109,7 +117,7 @@ export function AgentLayout() {
         {/* Left side: Logo + App Name + Project Switcher */}
         <div className="flex items-center gap-6">
           {/* Logo and App Name */}
-          <Link to="/plan" className="flex items-center gap-3">
+          <Link to="/dashboard" className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-lg">
               AI
             </div>
@@ -129,34 +137,47 @@ export function AgentLayout() {
         <div className="flex items-center gap-4">
           <OrgSwitcher />
 
-          {/* Settings Link */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/settings')}
-            title="Settings"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-
-          {/* User Info */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">
-              {user?.firstName?.[0]}
-              {user?.lastName?.[0]}
-            </div>
-            <div className="text-sm hidden lg:block">
-              <p className="font-medium text-slate-900">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-slate-500">{currentOrg?.role.name}</p>
-            </div>
-          </div>
-
-          {/* Logout */}
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
-            <LogOut className="h-4 w-4" />
-          </Button>
+          {/* User Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2 px-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">
+                  {user?.firstName?.[0]}
+                  {user?.lastName?.[0]}
+                </div>
+                <div className="text-sm hidden lg:block text-left">
+                  <p className="font-medium text-slate-900">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-xs text-slate-500">{currentOrg?.role.name}</p>
+                </div>
+                <ChevronDown className="h-4 w-4 text-slate-500 hidden lg:block" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=profile')}>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=notifications')}>
+                <Bell className="mr-2 h-4 w-4" />
+                Notifications
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=security')}>
+                <Shield className="mr-2 h-4 w-4" />
+                Security
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=appearance')}>
+                <Palette className="mr-2 h-4 w-4" />
+                Appearance
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
