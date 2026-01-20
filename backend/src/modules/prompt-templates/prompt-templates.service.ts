@@ -1,4 +1,5 @@
 import prisma from '../../config/database.js';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../../middleware/errorHandler.js';
 import { ErrorCodes } from '../../utils/responses.js';
 
@@ -295,7 +296,7 @@ export const seedDefaultTemplates = async () => {
         category: config.category,
         systemPrompt: defaults.systemPrompt,
         userPromptTemplate: defaults.userPromptTemplate,
-        variables: config.variables,
+        variables: config.variables as unknown as Prisma.InputJsonValue,
         isSystem: true,
         isActive: true,
       },

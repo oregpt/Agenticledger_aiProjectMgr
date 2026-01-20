@@ -9,6 +9,7 @@
  */
 
 import prisma from '../../config/database.js';
+import { Prisma } from '@prisma/client';
 import { aiConfig, type AIProvider } from '../../config/ai.js';
 
 export interface AISettings {
@@ -178,7 +179,7 @@ export async function clearOrgAISettings(organizationId: number): Promise<void> 
 
   await prisma.organization.update({
     where: { id: organizationId },
-    data: { config: restConfig },
+    data: { config: restConfig as Prisma.InputJsonValue },
   });
 }
 
@@ -235,7 +236,7 @@ export async function getEffectiveAISettings(organizationId?: number): Promise<A
         settings.anthropic.apiKey = orgSettings.anthropicApiKey;
       }
       if (orgSettings.anthropicModel) {
-        settings.anthropicModel = orgSettings.anthropicModel;
+        settings.anthropic.model = orgSettings.anthropicModel;
       }
     }
   }

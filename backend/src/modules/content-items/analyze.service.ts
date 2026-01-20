@@ -246,7 +246,7 @@ export async function analyzeContent(
     const dbPrompts = await getPromptsForAgent('intake-agent');
     if (dbPrompts) {
       // Use database prompts - apply context substitution
-      systemPrompt = interpolatePromptTemplate(dbPrompts.systemPrompt, context);
+      systemPrompt = interpolatePromptTemplate(dbPrompts.systemPrompt, context as unknown as Record<string, unknown>);
       userPrompt = interpolatePromptTemplate(dbPrompts.userPromptTemplate, { content: truncatedContent });
     } else {
       // Fallback to hardcoded functions
