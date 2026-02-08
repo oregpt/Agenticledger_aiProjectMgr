@@ -25,6 +25,7 @@ import outputFormatterRoutes from './modules/output-formatter/output-formatter.r
 import configRoutes from './modules/config/config.routes.js';
 import apiKeysRoutes from './modules/api-keys/api-keys.routes.js';
 import promptTemplatesRoutes from './modules/prompt-templates/prompt-templates.routes.js';
+import platformAuthRoutes from './routes/platform-auth.routes.js';
 
 const app = express();
 
@@ -70,8 +71,21 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// AgenticLedger Platform manifest
+app.get('/.well-known/agenticledger.json', (req, res) => {
+  res.json({
+    app_id: 'ai-project-manager',
+    name: 'AI Project Manager',
+    version: '1.0.0',
+    platform_login_path: '/api/auth/platform-login',
+    health_endpoint: '/health',
+    capabilities: ['sso'],
+  });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', platformAuthRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/organizations', organizationsRoutes);
 app.use('/api/roles', rolesRoutes);
