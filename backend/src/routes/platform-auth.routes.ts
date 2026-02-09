@@ -4,7 +4,7 @@
 
 import { Router, Request, Response } from 'express';
 import prisma from '../config/database.js';
-import { hash } from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { generateTokenPair } from '../services/token/token.service.js';
 import { verifyPlatformToken, type PlatformClaims } from '../services/platform-sso.service.js';
@@ -39,7 +39,7 @@ router.get('/platform-login', async (req: Request, res: Response) => {
       const nameParts = claims.name.split(' ');
       const firstName = nameParts[0] || claims.name;
       const lastName = nameParts.slice(1).join(' ') || '-';
-      const passwordHash = await hash(crypto.randomBytes(64).toString('hex'), 10);
+      const passwordHash = await bcrypt.hash(crypto.randomBytes(64).toString('hex'), 10);
 
       user = await prisma.user.create({
         data: {
