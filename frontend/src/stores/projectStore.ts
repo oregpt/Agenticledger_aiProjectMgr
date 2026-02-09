@@ -106,14 +106,8 @@ export const useProjectStore = create<ProjectState>()(
             // Auto-select first project if none selected and projects exist
             const { currentProject } = get();
             if (!currentProject && projects.length > 0) {
-              // Check if we have a persisted project ID that matches
-              const persistedId = currentProject?.id;
-              const matchingProject = persistedId
-                ? projects.find(p => p.id === persistedId)
-                : null;
-
-              // Select matching project or first project
-              get().setCurrentProject(matchingProject || projects[0]);
+              // Select first project
+              get().setCurrentProject(projects[0]);
             } else if (currentProject && projects.length > 0) {
               // Rehydrate full project data if we only have ID from persistence
               const fullProject = projects.find(p => p.id === currentProject.id);
