@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles/globals.css';
 
-// SSO callback handler — catches tokens from platform redirect (hash fragment)
+// Legacy SSO hash handler (fallback — primary flow now uses /sso-callback?code=xxx)
 if (window.location.hash.startsWith('#sso=')) {
   try {
     const payload = window.location.hash.slice(5);

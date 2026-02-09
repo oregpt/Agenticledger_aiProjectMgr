@@ -10,6 +10,8 @@ import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
 import { AcceptInvitationPage } from '@/pages/auth/AcceptInvitationPage';
+import { SsoCallbackPage } from '@/pages/auth/SsoCallbackPage';
+import { SsoCallbackPage } from '@/pages/auth/SsoCallbackPage';
 
 // Dashboard Page
 import { DashboardPage } from '@/pages/sample/DashboardPage';
@@ -49,6 +51,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
+        <Route path="/sso-callback" element={<SsoCallbackPage />} />
       </Route>
 
       {/* Main App Routes (Agent Layout) */}
