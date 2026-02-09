@@ -34,7 +34,7 @@ async function fetchPublicKey(): Promise<string> {
     throw new Error(`Failed to fetch JWKS from platform: ${response.status}`);
   }
 
-  const jwks = await response.json();
+  const jwks = (await response.json()) as { keys?: Array<Record<string, unknown>> };
   const key = jwks.keys?.[0];
   if (!key) {
     throw new Error('No keys found in platform JWKS');
