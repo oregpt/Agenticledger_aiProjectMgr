@@ -19,6 +19,8 @@ if (window.location.hash.startsWith('#sso=')) {
       version: 0,
     };
     localStorage.setItem('auth-storage', JSON.stringify(authData));
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
     window.location.hash = '';
     window.location.replace('/');
   } catch {
